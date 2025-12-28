@@ -43,7 +43,7 @@ export default function LoginScreen({ navigation }) {
       // ✅ store JWT
       await AsyncStorage.setItem("token", data.token);
 
-      Alert.alert("Success", `Welcome ${data.user.fname}`);
+      Alert.alert("Success", `Welcome ${data.user.fname} ${data.user.lname}`);
       navigation.navigate("My Contacts");
     } catch (err) {
       Alert.alert("Login Failed", err.message);
