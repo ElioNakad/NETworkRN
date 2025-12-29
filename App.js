@@ -3,10 +3,10 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import SignUpScreen from "./components/SignUpScreen";
 import LoginScreen from "./components/LoginScreen";
 import DisplayContacts from "./components/DisplayContacts";
+import ContatDetails from "./components/ContactDetails"
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +18,7 @@ export default function App() {
         <Stack.Screen name="My Contacts" component={DisplayContacts} />
 
         <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="Details" component={ContatDetails} />
       </Stack.Navigator>
     </NavigationContainer>
   );

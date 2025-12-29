@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function DisplayContacts() {
+export default function DisplayContacts({ navigation }) {
   const [contacts, setContacts] = useState([]);
   const [searchName, setSearchName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -65,26 +65,16 @@ export default function DisplayContacts() {
       );
   }, [contacts, searchName]);
 
-  const openWhatsApp = (phone) => {
-    if (!phone) return;
-    const cleanPhone = phone.replace(/[^\d]/g, "");
-    const url = `whatsapp://send?phone=${cleanPhone}`;
-
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (!supported) {
-          Alert.alert("Error", "WhatsApp is not installed");
-        } else {
-          return Linking.openURL(url);
-        }
-      })
-      .catch(() => Alert.alert("Error", "Something went wrong"));
-  };
+ 
 
   const renderContact = ({ item }) => (
     <TouchableOpacity
       style={styles.contactItem}
-      onPress={() => openWhatsApp(item.phone)}
+      onPress={() =>
+        navigation.navigate("Details", {
+        contact: item,
+        })
+      }
     >
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
@@ -93,7 +83,7 @@ export default function DisplayContacts() {
       </View>
 
       <View style={styles.contactInfo}>
-        <Text style={styles.contactName}>{item.display_name}</Text>
+        <Text style={styles.contactName}>{item.display_name}{/*" "+item.user_contact_id*/} </Text>
         <Text style={styles.contactPhone}>{item.phone}</Text>
       </View>
     </TouchableOpacity>
