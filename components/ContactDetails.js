@@ -37,7 +37,7 @@ export default function ContactDetails({ route }) {
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(
-  `http://192.168.16.103:3000/api/set-description/${contact.contact_id}`,
+  `http://192.168.16.104:3000/api/description/${contact.contact_id}`,
       {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ export default function ContactDetails({ route }) {
 
     try {
       const res = await fetch(
-        "http://192.168.16.103:3000/api/set-description",
+        "http://192.168.16.104:3000/api/description",
         {
           method: "POST",
           headers: {

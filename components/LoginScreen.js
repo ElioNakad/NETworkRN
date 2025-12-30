@@ -26,7 +26,7 @@ export default function LoginScreen({ navigation }) {
 
     try {
       const res = await fetch(
-        "http://192.168.16.103:3000/api/auth/login",
+        "http://192.168.16.104:3000/api/auth/login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -44,7 +44,7 @@ export default function LoginScreen({ navigation }) {
       await AsyncStorage.setItem("token", data.token);
 
       Alert.alert("Success", `Welcome ${data.user.fname}`);
-      navigation.navigate("My Contacts");
+      navigation.navigate("Menu");
     } catch (err) {
       Alert.alert("Login Failed", err.message);
     } finally {

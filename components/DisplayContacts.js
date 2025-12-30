@@ -31,7 +31,7 @@ export default function DisplayContacts({ navigation }) {
       }
 
       const res = await fetch(
-        "http://192.168.16.103:3000/api/contacts",
+        "http://192.168.16.104:3000/api/contacts",
         {
           headers: {
             Authorization: `Bearer ${token}`,

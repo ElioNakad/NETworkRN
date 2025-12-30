@@ -73,7 +73,7 @@ export default function SignUpScreen() {
       };
 
       const res = await fetch(
-        "http://192.168.16.103:3000/api/auth/send-otp",
+        "http://192.168.16.104:3000/api/auth/send-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,7 +108,7 @@ export default function SignUpScreen() {
       setLoading(true);
 
       const res = await fetch(
-        "http://192.168.16.103:3000/api/auth/verify-otp",
+        "http://192.168.16.104:3000/api/auth/verify-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
