@@ -22,48 +22,77 @@ export default function DisplayContacts({ navigation }) {
   }, []);
 
   async function loadContacts() {
-    try {
-      const token = await AsyncStorage.getItem("token");
-
-      if (!token) {
-        Alert.alert("Error", "Not authenticated");
-        return;
-      }
-
-      const res = await fetch(
-        "http://192.168.16.104:3000/api/contacts",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to load contacts");
-      }
-
-      setContacts(data.contacts);
-    } catch (err) {
-      Alert.alert("Error", err.message);
-    } finally {
-      setLoading(false);
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      Alert.alert("Error", "Not authenticated");
+      return;
     }
+
+    const res = await fetch(
+      "http://192.168.16.106:3000/api/contacts",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    // 🔹 ADD LABELS WITHOUT TOUCHING UI
+    const enriched = await Promise.all(
+      data.contacts.map(async (c) => {
+        try {
+          const [manualRes, defaultRes] = await Promise.all([
+            fetch(
+              `http://192.168.16.106:3000/api/description/${c.contact_id}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            ),
+            fetch(
+              `http://192.168.16.106:3000/api/description/default/${c.phone}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            ),
+          ]);
+
+          const manual = await manualRes.json();
+          const defaults = await defaultRes.json();
+
+          return {
+            ...c,
+            labels: [
+              ...(manual.descriptions || []),
+              ...(defaults.descriptions || []),
+            ].map((d) => d.label.toLowerCase()),
+          };
+        } catch {
+          return { ...c, labels: [] };
+        }
+      })
+    );
+
+    setContacts(enriched);
+  } catch (err) {
+    Alert.alert("Error", err.message);
+  } finally {
+    setLoading(false);
   }
+}
+
 
   const filteredContacts = useMemo(() => {
-    return [...contacts]
-      .filter((c) =>
-        (c.display_name || "")
-          .toLowerCase()
-          .includes(searchName.toLowerCase())
-      )
-      .sort((a, b) =>
-        (a.display_name || "").localeCompare(b.display_name || "")
-      );
-  }, [contacts, searchName]);
+  const q = searchName.toLowerCase();
+
+  return [...contacts]
+    .filter((c) =>
+      (c.display_name || "").toLowerCase().includes(q) ||
+      (c.phone || "").includes(searchName) ||
+      (c.labels || []).some((label) => label.includes(q))
+    )
+    .sort((a, b) =>
+      (a.display_name || "").localeCompare(b.display_name || "")
+    );
+}, [contacts, searchName]);
+
 
  
 

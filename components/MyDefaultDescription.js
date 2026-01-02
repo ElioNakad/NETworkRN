@@ -31,7 +31,7 @@ export default function MyDefaultDescription() {
       if (!token) return;
 
       const res = await fetch(
-        "http://192.168.16.104:3000/api/description/get-default",
+        "http://192.168.16.106:3000/api/description/get-default",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -52,6 +52,48 @@ export default function MyDefaultDescription() {
       setLoadingList(false);
     }
   }, []);
+
+  const handleDelete = async (id) => {
+  Alert.alert(
+    "Delete",
+    "Are you sure you want to delete this description?",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const token = await AsyncStorage.getItem("token");
+            if (!token) return;
+
+            const res = await fetch(
+              `http://192.168.16.106:3000/api/description/default/${id}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+              throw new Error(data.message || "Delete failed");
+            }
+
+            // 🔁 Refresh list after delete
+            loadDefaults();
+          } catch (err) {
+            Alert.alert("Error", err.message);
+          }
+        },
+      },
+    ]
+  );
+};
+
 
   useEffect(() => {
     loadDefaults();
@@ -74,7 +116,7 @@ export default function MyDefaultDescription() {
       }
 
       const res = await fetch(
-        "http://192.168.16.104:3000/api/description/set-default",
+        "http://192.168.16.106:3000/api/description/set-default",
         {
           method: "POST",
           headers: {
@@ -104,13 +146,23 @@ export default function MyDefaultDescription() {
     }
   };
 
+  
+
   // 🔹 RENDER ITEM
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+  <View style={styles.card}>
+    <View style={styles.cardHeader}>
       <Text style={styles.cardLabel}>{item.label}</Text>
-      <Text style={styles.cardDescription}>{item.description}</Text>
+
+      <TouchableOpacity onPress={() => handleDelete(item.id)}>
+        <Text style={styles.deleteIcon}>🗑️</Text>
+      </TouchableOpacity>
     </View>
-  );
+
+    <Text style={styles.cardDescription}>{item.description}</Text>
+  </View>
+);
+
 
   return (
     <KeyboardAvoidingView
@@ -221,4 +273,15 @@ const styles = StyleSheet.create({
     color: "#888",
     marginTop: 20,
   },
+  cardHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+},
+
+deleteIcon: {
+  fontSize: 18,
+  color: "red",
+},
+
 });

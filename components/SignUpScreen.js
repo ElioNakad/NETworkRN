@@ -18,36 +18,63 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [countryCode, setCountryCode] = useState("");
 
   const [otp, setOtp] = useState("");
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const normalizePhone = (rawNumber, countryCode) => {
+  if (!rawNumber) return null;
+
+  // Remove spaces, dashes, parentheses
+  let number = rawNumber.replace(/[^\d+]/g, "");
+
+  // If already international
+  if (number.startsWith("+")) return number;
+
+  // If starts with 00 (international)
+  if (number.startsWith("00")) return "+" + number.slice(2);
+
+  // Otherwise assume local number
+  return `${countryCode}${number}`;
+  };
+
+
   // 🔹 Load contacts
   const loadContacts = async () => {
-    if (Platform.OS === "android") {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS
-      );
-      if (granted !== PermissionsAndroid.RESULTS.GRANTED) return [];
-    }
+  if (Platform.OS === "android") {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_CONTACTS
+    );
+    if (granted !== PermissionsAndroid.RESULTS.GRANTED) return [];
+  }
 
-    const contacts = await Contacts.getAll();
+  const contacts = await Contacts.getAll();
 
-    return contacts
-      .map(c => ({
-        phone: c.phoneNumbers[0]?.number?.replace(/\s+/g, ""),
-        displayName: c.displayName || "Unknown",
-      }))
-      .filter(c => c.phone);
-  };
+  return contacts
+    .map(c => {
+      const raw = c.phoneNumbers[0]?.number;
+      const normalized = normalizePhone(raw, countryCode);
+
+      return normalized
+        ? {
+            phone: normalized,
+            displayName: c.displayName || "Unknown",
+          }
+        : null;
+    })
+    .filter(Boolean);
+};
+
 
   // 🔹 SEND OTP
   const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !phone || !password) {
-      Alert.alert("Error", "All fields are required");
-      return;
+    if (!firstName || !lastName || !email || !countryCode || !phone || !password) {
+     Alert.alert("Error", "All fields are required");
+     return;
     }
+
 
     if (!email.includes("@")) {
       Alert.alert("Error", "Invalid email");
@@ -62,18 +89,19 @@ export default function SignUpScreen() {
     try {
       setLoading(true);
       const contacts = await loadContacts();
+      const fullPhone = `${countryCode}${phone}`;
 
       const payload = {
         fname: firstName,
         lname: lastName,
         email,
-        phone,
+        phone: fullPhone,
         password,
         contacts,
       };
 
       const res = await fetch(
-        "http://192.168.16.104:3000/api/auth/send-otp",
+        "http://192.168.16.106:3000/api/auth/send-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,7 +136,7 @@ export default function SignUpScreen() {
       setLoading(true);
 
       const res = await fetch(
-        "http://192.168.16.104:3000/api/auth/verify-otp",
+        "http://192.168.16.106:3000/api/auth/verify-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -139,6 +167,7 @@ export default function SignUpScreen() {
 
       <TextInput style={styles.input} placeholder="First Name" placeholderTextColor={"grey"} onChangeText={setFirstName} />
       <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor={"grey"} onChangeText={setLastName} />
+      <TextInput style={styles.input} placeholder="Country Code (e.g. +961)" placeholderTextColor={"grey"} keyboardType="phone-pad" value={countryCode} onChangeText={setCountryCode}/>
       <TextInput style={styles.input} placeholder="Phone Number" placeholderTextColor={"grey"} keyboardType="phone-pad" onChangeText={setPhone} />
       <TextInput style={styles.input} placeholder="Email" placeholderTextColor={"grey"} autoCapitalize="none" onChangeText={setEmail} />
       <TextInput style={styles.input} placeholder="Password" placeholderTextColor={"grey"} secureTextEntry onChangeText={setPassword} />

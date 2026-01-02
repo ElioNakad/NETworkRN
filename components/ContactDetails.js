@@ -9,81 +9,148 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  Linking,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function ContactDetails({ route }) {
+export default function ContactDetails({ route,navigation }) {
   const { contact } = route.params || {};
 
-  // /////////////////
-  // 🔹 STATE
-  /////////////////
   const [modalVisible, setModalVisible] = useState(false);
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
 
+  // 🔹 MANUAL DESCRIPTIONS
   const [descriptions, setDescriptions] = useState([]);
+
+  // 🔹 DEFAULT (REVIEWS)
+  const [defaultDescriptions, setDefaultDescriptions] = useState([]);
+
   const [loading, setLoading] = useState(false);
 
-  /////////////////
-  // 🔹 FETCH DESCRIPTIONS
-  /////////////////
+  // =============================
+  // 🔹 FETCH MANUAL DESCRIPTIONS
+  // =============================
   const loadDescriptions = useCallback(async () => {
     if (!contact) return;
 
     try {
       setLoading(true);
-
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(
-  `http://192.168.16.104:3000/api/description/${contact.contact_id}`,
-      {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-  );
+        `http://192.168.16.106:3000/api/description/${contact.contact_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to load descriptions");
-      }
+      if (!res.ok) throw new Error(data.message);
 
       setDescriptions(data.descriptions);
     } catch (err) {
-      console.error(err);
       Alert.alert("Error", err.message);
     } finally {
       setLoading(false);
     }
   }, [contact]);
 
-  /////////////////
-  // 🔹 LOAD ON MOUNT
-  /////////////////
-  useEffect(() => {
-    loadDescriptions();
-  }, [loadDescriptions]);
+  // =============================
+  // 🔹 FETCH DEFAULT (REVIEWS)
+  // =============================
+  const loadDefaultDescriptions = useCallback(async () => {
+    if (!contact?.phone) return;
 
-  /////////////////
-  // 🔹 INSERT DESCRIPTION
-  /////////////////
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await fetch(
+        `http://192.168.16.106:3000/api/description/default/${contact.phone}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setDefaultDescriptions(data.descriptions);
+    } catch (err) {
+      Alert.alert("Error", err.message);
+    }
+  }, [contact]);
+
+  // =============================
+  // 🔹 WHATSAPP
+  // =============================
+  const openWhatsApp = () => {
+    if (!contact?.phone) return;
+
+    const phone = contact.phone.replace(/\s+/g, "");
+    const url = `whatsapp://send?phone=${phone}`;
+
+    Linking.openURL(url).catch(() =>
+      Alert.alert("WhatsApp not installed")
+    );
+  };
+
+  // =============================
+  // 🔹 DELETE MANUAL LABEL
+  // =============================
+  const handleDelete = async (id) => {
+    Alert.alert("Delete label", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const token = await AsyncStorage.getItem("token");
+
+            const res = await fetch(
+              `http://192.168.16.106:3000/api/description/manual/${id}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
+
+            setDescriptions((prev) =>
+              prev.filter((item) => item.id !== id)
+            );
+          } catch (err) {
+            Alert.alert("Error", err.message);
+          }
+        },
+      },
+    ]);
+  };
+
+  // =============================
+  // 🔹 SAVE MANUAL LABEL
+  // =============================
   const handleSave = async () => {
     if (!label || !description) {
-      Alert.alert("Error", "Both fields are required");
+      Alert.alert("Error", "Both fields required");
       return;
     }
 
     try {
       const res = await fetch(
-        "http://192.168.16.104:3000/api/description",
+        "http://192.168.16.106:3000/api/description",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             user_contact_id: contact.user_contact_id,
             label,
@@ -93,25 +160,22 @@ export default function ContactDetails({ route }) {
       );
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to save");
-      }
+      if (!res.ok) throw new Error(data.message);
 
       await loadDescriptions();
-
       setLabel("");
       setDescription("");
       setModalVisible(false);
     } catch (err) {
-      console.error(err);
       Alert.alert("Error", err.message);
     }
   };
 
-  /////////////////
-  // 🔹 SAFE RENDER
-  /////////////////
+  useEffect(() => {
+    loadDescriptions();
+    loadDefaultDescriptions();
+  }, [loadDescriptions, loadDefaultDescriptions]);
+
   if (!contact) {
     return (
       <View style={styles.center}>
@@ -122,57 +186,87 @@ export default function ContactDetails({ route }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Avatar */}
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {contact.display_name ? contact.display_name[0] : "?"}
-        </Text>
+      {/* AVATAR + REVIEWS BUTTON */}
+      <View style={styles.avatarRow}>
+        <TouchableOpacity style={styles.avatar} onPress={openWhatsApp}>
+          <Text style={styles.avatarText}>
+            {contact.display_name?.[0] || "?"}
+          </Text>
+        </TouchableOpacity>
+
+        {defaultDescriptions.length > 0 && (
+          <TouchableOpacity
+           style={styles.reviewsButton}
+           onPress={() =>
+           navigation.navigate("Reviews", {
+           contact,
+           defaultDescriptions,
+          })
+      }
+    >
+       <Text style={styles.reviewsIcon}>⭐</Text>
+  <Text style={styles.reviewsText}>REVIEWS</Text>
+</TouchableOpacity>
+
+        )}
       </View>
 
-      {/* Info */}
       <Text style={styles.name}>{contact.display_name}</Text>
       <Text style={styles.phone}>{contact.phone}</Text>
 
-      {/* Add Label Button */}
+      {/* ADD LABEL */}
       <TouchableOpacity
         style={styles.button}
         onPress={() => setModalVisible(true)}
       >
         <Text style={{ color: "white" }}>
-          + Add new labels to {contact.display_name}
+          + Add label to {contact.display_name}
         </Text>
       </TouchableOpacity>
 
-      {/* 🔹 LABEL CARDS */}
-      <View style={styles.cardsContainer}>
-        {loading && <Text>Loading...</Text>}
+      {/* DEFAULT LABELS */}
+      <Text style={styles.sectionTitle}>Default Labels</Text>
 
-        {!loading && descriptions.length === 0 && (
-          <Text style={styles.emptyText}>No labels added yet</Text>
-        )}
+      {defaultDescriptions.length === 0 && (
+        <Text style={styles.emptyText}>No default labels</Text>
+      )}
 
-        {descriptions.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Text style={styles.cardLabel}>{item.label}</Text>
-            <Text style={styles.cardDescription}>{item.description}</Text>
+      {defaultDescriptions.map((item) => (
+        <View key={item.id} style={styles.defaultCard}>
+          <Text style={styles.defaultLabel}>{item.label}</Text>
+          <Text>{item.description}</Text>
+        </View>
+      ))}
+
+      {/* MANUAL LABELS */}
+      <Text style={styles.sectionTitle}>Your Labels</Text>
+
+      {loading && <Text>Loading...</Text>}
+
+      {!loading && descriptions.length === 0 && (
+        <Text style={styles.emptyText}>No labels yet</Text>
+      )}
+
+      {descriptions.map((item) => (
+        <View key={item.id} style={styles.manualCard}>
+          <View style={styles.manualHeader}>
+            <Text style={styles.manualLabel}>{item.label}</Text>
+            <TouchableOpacity onPress={() => handleDelete(item.id)}>
+              <Text style={styles.deleteIcon}>🗑️</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </View>
+          <Text>{item.description}</Text>
+        </View>
+      ))}
 
-      {/* 🔹 MODAL */}
-      <Modal
-        animationType="slide"
-        transparent
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
+      {/* MODAL */}
+      <Modal transparent visible={modalVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Label</Text>
 
             <TextInput
               placeholder="Label"
-              placeholderTextColor="grey"
               style={styles.input}
               value={label}
               onChangeText={setLabel}
@@ -180,14 +274,17 @@ export default function ContactDetails({ route }) {
 
             <TextInput
               placeholder="Description"
-              placeholderTextColor="grey"
-              style={styles.input}
+              style={[styles.input, styles.textArea]}
               value={description}
               onChangeText={setDescription}
+              multiline
             />
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={{ color: "white", fontWeight: "600" }}>Save</Text>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSave}
+            >
+              <Text style={styles.saveText}>Save</Text>
             </TouchableOpacity>
 
             <Pressable onPress={() => setModalVisible(false)}>
@@ -200,113 +297,134 @@ export default function ContactDetails({ route }) {
   );
 }
 
-/////////////////
+// =============================
 // 🔹 STYLES
-/////////////////
+// =============================
 const styles = StyleSheet.create({
-  container: {
+  container: { padding: 16 },
+
+  avatarRow: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 20,
-    backgroundColor: "#f5f5f5",
+    marginBottom: 12,
   },
+
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#007AFF",
-    justifyContent: "center",
+    backgroundColor: "#444",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "center",
   },
-  avatarText: {
-    color: "white",
-    fontSize: 36,
+
+  avatarText: { color: "white", fontSize: 32 },
+
+  reviewsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 14,
+    backgroundColor: "#FFD700",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 22,
+    elevation: 5,
+  },
+
+  reviewsIcon: { fontSize: 16, marginRight: 6 },
+
+  reviewsText: {
+    fontWeight: "bold",
+    letterSpacing: 0.6,
+  },
+
+  name: { fontSize: 22, fontWeight: "bold" },
+  phone: { color: "gray" },
+
+  sectionTitle: {
+    marginTop: 20,
+    fontSize: 18,
     fontWeight: "bold",
   },
-  name: {
-    fontSize: 26,
-    fontWeight: "600",
-    color: "#333",
+
+  defaultCard: {
+    backgroundColor: "#FFF3CD",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
   },
-  phone: {
-    fontSize: 18,
-    color: "#666",
-    marginTop: 10,
+
+  defaultLabel: { fontWeight: "bold" },
+
+  manualCard: {
+    backgroundColor: "#E3F2FD",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
   },
+
+  manualLabel: { fontWeight: "bold" },
+
+  manualHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  deleteIcon: { fontSize: 18, color: "#FF3B30" },
+
   button: {
     backgroundColor: "#007AFF",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginTop: 15,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: "center",
   },
-  cardsContainer: {
-    width: "90%",
-    marginTop: 20,
-  },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
-    elevation: 2,
-  },
-  cardLabel: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#007AFF",
-  },
-  cardDescription: {
-    marginTop: 5,
-    fontSize: 15,
-    color: "#333",
-  },
-  emptyText: {
-    textAlign: "center",
-    color: "#777",
-  },
+
+  emptyText: { color: "gray", marginTop: 6 },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },
+
   modalContent: {
-    width: "85%",
+    width: "90%",
     backgroundColor: "white",
     borderRadius: 16,
     padding: 20,
   },
+
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 15,
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
     textAlign: "center",
   },
+
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 12,
     marginBottom: 12,
-    color: "black",
   },
+
+  textArea: { height: 100 },
+
   saveButton: {
     backgroundColor: "#007AFF",
-    paddingVertical: 14,
+    padding: 14,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 5,
   },
+
+  saveText: { color: "white", fontWeight: "bold" },
+
   cancelText: {
     textAlign: "center",
+    color: "#FF3B30",
     marginTop: 12,
-    color: "black",
-    fontWeight: "bold",
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
