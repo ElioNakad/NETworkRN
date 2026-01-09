@@ -10,7 +10,7 @@ import ContatDetails from "./components/ContactDetails";
 import MyDefaultDescription from "./components/MyDefaultDescription";
 import Menu from "./components/Menu"
 import Review from "./components/Review"
-
+import Settings from "./components/Settings"
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -26,6 +26,7 @@ export default function App() {
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="Details" component={ContatDetails} />
         <Stack.Screen name="Reviews" component={Review} />
+        <Stack.Screen name="Settings" component={Settings} />
 
       </Stack.Navigator>
     </NavigationContainer>

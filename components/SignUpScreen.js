@@ -23,58 +23,59 @@ export default function SignUpScreen() {
   const [otp, setOtp] = useState("");
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [linkedin, setLinkedin] = useState("");
+  const [selectedDocument, setSelectedDocument] = useState(null);
+
+  const url = "192.168.16.106";
 
   const normalizePhone = (rawNumber, countryCode) => {
-  if (!rawNumber) return null;
+    if (!rawNumber) return null;
 
-  // Remove spaces, dashes, parentheses
-  let number = rawNumber.replace(/[^\d+]/g, "");
+    // Remove spaces, dashes, parentheses
+    let number = rawNumber.replace(/[^\d+]/g, "");
 
-  // If already international
-  if (number.startsWith("+")) return number;
+    // If already international
+    if (number.startsWith("+")) return number;
 
-  // If starts with 00 (international)
-  if (number.startsWith("00")) return "+" + number.slice(2);
+    // If starts with 00 (international)
+    if (number.startsWith("00")) return "+" + number.slice(2);
 
-  // Otherwise assume local number
-  return `${countryCode}${number}`;
+    // Otherwise assume local number
+    return `${countryCode}${number}`;
   };
-
 
   // 🔹 Load contacts
   const loadContacts = async () => {
-  if (Platform.OS === "android") {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_CONTACTS
-    );
-    if (granted !== PermissionsAndroid.RESULTS.GRANTED) return [];
-  }
+    if (Platform.OS === "android") {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_CONTACTS
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) return [];
+    }
 
-  const contacts = await Contacts.getAll();
+    const contacts = await Contacts.getAll();
 
-  return contacts
-    .map(c => {
-      const raw = c.phoneNumbers[0]?.number;
-      const normalized = normalizePhone(raw, countryCode);
+    return contacts
+      .map((c) => {
+        const raw = c.phoneNumbers[0]?.number;
+        const normalized = normalizePhone(raw, countryCode);
 
-      return normalized
-        ? {
-            phone: normalized,
-            displayName: c.displayName || "Unknown",
-          }
-        : null;
-    })
-    .filter(Boolean);
-};
-
+        return normalized
+          ? {
+              phone: normalized,
+              displayName: c.displayName || "Unknown",
+            }
+          : null;
+      })
+      .filter(Boolean);
+  };
 
   // 🔹 SEND OTP
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !countryCode || !phone || !password) {
-     Alert.alert("Error", "All fields are required");
-     return;
+      Alert.alert("Error", "All fields are required");
+      return;
     }
-
 
     if (!email.includes("@")) {
       Alert.alert("Error", "Invalid email");
@@ -98,16 +99,14 @@ export default function SignUpScreen() {
         phone: fullPhone,
         password,
         contacts,
+        linkedin,
       };
 
-      const res = await fetch(
-        "http://192.168.16.106:3000/api/auth/send-otp",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, payload }),
-        }
-      );
+      const res = await fetch("http://" + url + ":3000/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, payload }),
+      });
 
       const data = await res.json();
 
@@ -135,14 +134,11 @@ export default function SignUpScreen() {
     try {
       setLoading(true);
 
-      const res = await fetch(
-        "http://192.168.16.106:3000/api/auth/verify-otp",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, otp }),
-        }
-      );
+      const res = await fetch("http://" + url + ":3000/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
 
       const data = await res.json();
 
@@ -161,18 +157,68 @@ export default function SignUpScreen() {
     }
   };
 
+ 
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
 
-      <TextInput style={styles.input} placeholder="First Name" placeholderTextColor={"grey"} onChangeText={setFirstName} />
-      <TextInput style={styles.input} placeholder="Last Name" placeholderTextColor={"grey"} onChangeText={setLastName} />
-      <TextInput style={styles.input} placeholder="Country Code (e.g. +961)" placeholderTextColor={"grey"} keyboardType="phone-pad" value={countryCode} onChangeText={setCountryCode}/>
-      <TextInput style={styles.input} placeholder="Phone Number" placeholderTextColor={"grey"} keyboardType="phone-pad" onChangeText={setPhone} />
-      <TextInput style={styles.input} placeholder="Email" placeholderTextColor={"grey"} autoCapitalize="none" onChangeText={setEmail} />
-      <TextInput style={styles.input} placeholder="Password" placeholderTextColor={"grey"} secureTextEntry onChangeText={setPassword} />
+      <TextInput
+        style={styles.input}
+        placeholder="First Name"
+        placeholderTextColor={"grey"}
+        onChangeText={setFirstName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Last Name"
+        placeholderTextColor={"grey"}
+        onChangeText={setLastName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Country Code (e.g. +961)"
+        placeholderTextColor={"grey"}
+        keyboardType="phone-pad"
+        value={countryCode}
+        onChangeText={setCountryCode}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Phone Number"
+        placeholderTextColor={"grey"}
+        keyboardType="phone-pad"
+        onChangeText={setPhone}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor={"grey"}
+        autoCapitalize="none"
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="LinkedIn"
+        placeholderTextColor={"grey"}
+        value={linkedin}
+        onChangeText={setLinkedin}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor={"grey"}
+        secureTextEntry
+        onChangeText={setPassword}
+      />
 
-      <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={loading}>
+      
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleSignUp}
+        disabled={loading}
+      >
         <Text style={styles.buttonText}>
           {loading ? "Please wait..." : "Create Account"}
         </Text>
@@ -187,6 +233,7 @@ export default function SignUpScreen() {
             <TextInput
               style={styles.input}
               placeholder="6-digit OTP"
+              placeholderTextColor={"grey"}
               keyboardType="numeric"
               value={otp}
               onChangeText={setOtp}
@@ -222,7 +269,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
-    color: "black"
+    color: "black",
   },
   button: {
     backgroundColor: "#000",
@@ -233,6 +280,19 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
+    fontWeight: "bold",
+  },
+  documentButton: {
+    borderWidth: 1,
+    borderColor: "#000",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  documentButtonText: {
+    color: "#000",
     fontWeight: "bold",
   },
   modalOverlay: {

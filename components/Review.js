@@ -12,6 +12,21 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+/* =============================
+   🔹 DATE FORMATTER
+============================= */
+const formatDateTime = (dateString) => {
+  const d = new Date(dateString);
+  return d.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+
 export default function Reviews({ route }) {
   const { contact, defaultDescriptions } = route.params;
 
@@ -22,10 +37,11 @@ export default function Reviews({ route }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [review, setReview] = useState("");
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const url="192.168.16.106"
 
-  // =============================
-  // 🔹 FETCH REVIEWS (NEW ENDPOINT)
-  // =============================
+  /* =============================
+     🔹 FETCH REVIEWS
+  ============================= */
   const loadReviews = async (label) => {
     try {
       setSelectedLabel(label);
@@ -34,7 +50,7 @@ export default function Reviews({ route }) {
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(
-        `http://192.168.16.106:3000/api/review/my-reviews?labelId=${label.id}`,
+        `http://${url}:3000/api/review/my-reviews?labelId=${label.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -53,9 +69,9 @@ export default function Reviews({ route }) {
     }
   };
 
-  // =============================
-  // 🔹 SUBMIT REVIEW (UNCHANGED)
-  // =============================
+  /* =============================
+     🔹 SUBMIT REVIEW
+  ============================= */
   const submitReview = async () => {
     if (!review.trim()) {
       Alert.alert("Error", "Review cannot be empty");
@@ -67,7 +83,7 @@ export default function Reviews({ route }) {
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(
-        "http://192.168.16.106:3000/api/review/insert-review",
+        "http://"+url+":3000/api/review/insert-review",
         {
           method: "POST",
           headers: {
@@ -88,7 +104,6 @@ export default function Reviews({ route }) {
       setModalVisible(false);
       setReview("");
 
-      // 🔁 Reload reviews instantly
       loadReviews(selectedLabel);
     } catch (err) {
       Alert.alert("Error", err.message);
@@ -99,16 +114,17 @@ export default function Reviews({ route }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Reviews</Text>
         <Text style={styles.contactName}>{contact.display_name}</Text>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* ================= LABELS SECTION ================= */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* ================= LABELS ================= */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select a Category</Text>
+
           {defaultDescriptions.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -120,10 +136,12 @@ export default function Reviews({ route }) {
               activeOpacity={0.7}
             >
               <View style={styles.labelHeader}>
-                <Text style={[
-                  styles.label,
-                  selectedLabel?.id === item.id && styles.activeLabelText
-                ]}>
+                <Text
+                  style={[
+                    styles.label,
+                    selectedLabel?.id === item.id && styles.activeLabelText,
+                  ]}
+                >
                   {item.label}
                 </Text>
                 {selectedLabel?.id === item.id && (
@@ -137,12 +155,14 @@ export default function Reviews({ route }) {
           ))}
         </View>
 
-        {/* ================= REVIEWS SECTION ================= */}
+        {/* ================= REVIEWS ================= */}
         {selectedLabel && (
           <View style={styles.section}>
             <View style={styles.reviewsHeader}>
               <Text style={styles.sectionTitle}>Reviews</Text>
-              <Text style={styles.categoryBadge}>{selectedLabel.label}</Text>
+              <Text style={styles.categoryBadge}>
+                {selectedLabel.label}
+              </Text>
             </View>
 
             {loadingReviews && (
@@ -156,41 +176,48 @@ export default function Reviews({ route }) {
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyIcon}>📝</Text>
                 <Text style={styles.emptyText}>No reviews yet</Text>
-                <Text style={styles.emptySubtext}>Be the first to add a review!</Text>
+                <Text style={styles.emptySubtext}>
+                  Be the first to add a review!
+                </Text>
               </View>
             )}
 
-            {!loadingReviews && reviews.map((r, index) => (
-              <View key={r.review_id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.avatarCircle}>
-                    <Text style={styles.avatarText}>
-                      {r.reviewer_fname?.[0]}{r.reviewer_lname?.[0]}
-                    </Text>
+            {!loadingReviews &&
+              reviews.map((r, index) => (
+                <View key={r.review_id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <View style={styles.avatarCircle}>
+                      <Text style={styles.avatarText}>
+                        {r.reviewer_fname?.[0]}
+                        {r.reviewer_lname?.[0]}
+                      </Text>
+                    </View>
+
+                    <View style={styles.reviewerInfo}>
+                      <Text style={styles.reviewer}>
+                        {r.reviewer_fname} {r.reviewer_lname} {"\n"+r.reviewer_email}
+                      </Text>
+                      <Text style={styles.reviewMeta}>
+                        {formatDateTime(r.review_date)} · Review #{reviews.length - index}
+                      </Text>
+
+                    </View>
                   </View>
-                  <View style={styles.reviewerInfo}>
-                    <Text style={styles.reviewer}>
-                      {r.reviewer_fname} {r.reviewer_lname}
-                    </Text>
-                    <Text style={styles.reviewNumber}>Review #{reviews.length - index}</Text>
-                  </View>
+
+                  <Text style={styles.reviewText}>{r.review_text}</Text>
                 </View>
-                <Text style={styles.reviewText}>{r.review_text}</Text>
-              </View>
-            ))}
+              ))}
           </View>
         )}
 
-        {/* Bottom spacing for FAB */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ================= ADD REVIEW BUTTON ================= */}
+      {/* ================= FAB ================= */}
       {selectedLabel && (
         <TouchableOpacity
           style={styles.fab}
           onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}
         >
           <Text style={styles.fabText}>✍️</Text>
         </TouchableOpacity>
@@ -202,7 +229,7 @@ export default function Reviews({ route }) {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Write a Review</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 style={styles.closeButton}
               >
@@ -211,13 +238,14 @@ export default function Reviews({ route }) {
             </View>
 
             <View style={styles.modalCategoryTag}>
-              <Text style={styles.modalCategoryText}>{selectedLabel?.label}</Text>
+              <Text style={styles.modalCategoryText}>
+                {selectedLabel?.label}
+              </Text>
             </View>
 
             <TextInput
               style={styles.input}
               placeholder="Share your thoughts..."
-              placeholderTextColor="#999"
               multiline
               value={review}
               onChangeText={setReview}
@@ -227,10 +255,9 @@ export default function Reviews({ route }) {
             <Text style={styles.charCount}>{review.length}/500</Text>
 
             <TouchableOpacity
-              style={[styles.submitButton, loadingSubmit && styles.submitButtonDisabled]}
+              style={styles.submitButton}
               onPress={submitReview}
               disabled={loadingSubmit}
-              activeOpacity={0.8}
             >
               {loadingSubmit ? (
                 <ActivityIndicator color="#fff" />
@@ -245,11 +272,12 @@ export default function Reviews({ route }) {
   );
 }
 
+/* =============================
+   🔹 STYLES
+============================= */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f7fa",
-  },
+  container: { flex: 1, backgroundColor: "#f5f7fa" },
+
   header: {
     backgroundColor: "#fff",
     paddingTop: 60,
@@ -257,36 +285,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
     elevation: 4,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1a1a1a",
-    marginBottom: 4,
-  },
-  contactName: {
-    fontSize: 16,
-    color: "#666",
-    fontWeight: "500",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  section: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1a1a1a",
-    marginBottom: 16,
-  },
+
+  title: { fontSize: 28, fontWeight: "700" },
+  contactName: { fontSize: 16, color: "#666" },
+
+  section: { paddingHorizontal: 20, paddingTop: 24 },
+  sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 16 },
+
   labelCard: {
     backgroundColor: "#fff",
     padding: 18,
@@ -294,38 +301,23 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 2,
     borderColor: "#e8ecf1",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
+
   activeLabel: {
     borderColor: "#f5b400",
     backgroundColor: "#fffbf0",
-    shadowColor: "#f5b400",
-    shadowOpacity: 0.15,
-    elevation: 4,
   },
+
   labelHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
   },
-  label: {
-    fontWeight: "700",
-    fontSize: 16,
-    color: "#1a1a1a",
-  },
-  activeLabelText: {
-    color: "#f5b400",
-  },
-  description: {
-    color: "#666",
-    fontSize: 14,
-    lineHeight: 20,
-  },
+
+  label: { fontSize: 16, fontWeight: "700" },
+  activeLabelText: { color: "#f5b400" },
+
+  description: { color: "#666", marginTop: 6 },
+
   selectedBadge: {
     backgroundColor: "#f5b400",
     width: 24,
@@ -334,17 +326,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  selectedBadgeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "700",
-  },
+
+  selectedBadgeText: { color: "#fff", fontWeight: "700" },
+
   reviewsHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
   },
+
   categoryBadge: {
     backgroundColor: "#f5b400",
     color: "#fff",
@@ -354,24 +343,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
+
   reviewCard: {
     backgroundColor: "#fff",
     padding: 18,
     borderRadius: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e8ecf1",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
+
+  reviewHeader: { flexDirection: "row", marginBottom: 12 },
+
   avatarCircle: {
     width: 44,
     height: 44,
@@ -381,56 +362,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 12,
   },
-  avatarText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  reviewerInfo: {
-    flex: 1,
-  },
-  reviewer: {
-    fontWeight: "700",
-    fontSize: 15,
-    color: "#1a1a1a",
-    marginBottom: 2,
-  },
-  reviewNumber: {
-    fontSize: 12,
-    color: "#999",
-  },
-  reviewText: {
-    fontSize: 14,
-    color: "#444",
-    lineHeight: 22,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    paddingVertical: 40,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: "#666",
-    fontSize: 14,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    paddingVertical: 60,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 4,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#999",
-  },
+
+  avatarText: { color: "#fff", fontWeight: "700" },
+
+  reviewer: { fontWeight: "700" },
+  reviewMeta: { fontSize: 12, color: "#999" },
+
+  reviewText: { marginTop: 6, color: "#444", lineHeight: 22 },
+
+  loadingContainer: { alignItems: "center", paddingVertical: 40 },
+  loadingText: { marginTop: 12 },
+
+  emptyContainer: { alignItems: "center", paddingVertical: 60 },
+  emptyIcon: { fontSize: 48 },
+
   fab: {
     position: "absolute",
     right: 20,
@@ -441,38 +386,31 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#f5b400",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
     elevation: 8,
   },
-  fabText: {
-    fontSize: 28,
-  },
+
+  fabText: { fontSize: 28 },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "flex-end",
   },
+
   modalContent: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    paddingBottom: 40,
   },
+
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
   },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1a1a1a",
-  },
+
+  modalTitle: { fontSize: 22, fontWeight: "700" },
+
   closeButton: {
     width: 32,
     height: 32,
@@ -481,61 +419,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  closeButtonText: {
-    fontSize: 18,
-    color: "#666",
-  },
+
   modalCategoryTag: {
-    alignSelf: "flex-start",
-    backgroundColor: "#fffbf0",
-    borderWidth: 1,
+    marginTop: 12,
+    marginBottom: 16,
     borderColor: "#f5b400",
+    borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    marginBottom: 16,
+    alignSelf: "flex-start",
   },
-  modalCategoryText: {
-    color: "#f5b400",
-    fontSize: 13,
-    fontWeight: "600",
-  },
+
+  modalCategoryText: { color: "#f5b400", fontWeight: "600" },
+
   input: {
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#e8ecf1",
     borderRadius: 16,
     padding: 16,
     minHeight: 140,
-    textAlignVertical: "top",
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#1a1a1a",
-    backgroundColor: "#fafbfc",
   },
-  charCount: {
-    textAlign: "right",
-    marginTop: 8,
-    fontSize: 12,
-    color: "#999",
-  },
+
+  charCount: { textAlign: "right", color: "#999", marginTop: 6 },
+
   submitButton: {
     backgroundColor: "#f5b400",
     padding: 18,
     borderRadius: 16,
     marginTop: 20,
     alignItems: "center",
-    shadowColor: "#f5b400",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  submitButtonDisabled: {
-    opacity: 0.7,
-  },
-  submitText: {
-    fontWeight: "700",
-    fontSize: 16,
-    color: "#fff",
-  },
+
+  submitText: { color: "#fff", fontWeight: "700" },
 });

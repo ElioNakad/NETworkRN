@@ -16,6 +16,7 @@ export default function DisplayContacts({ navigation }) {
   const [contacts, setContacts] = useState([]);
   const [searchName, setSearchName] = useState("");
   const [loading, setLoading] = useState(true);
+  const url="192.168.16.106"
 
   useEffect(() => {
     loadContacts();
@@ -30,7 +31,7 @@ export default function DisplayContacts({ navigation }) {
     }
 
     const res = await fetch(
-      "http://192.168.16.106:3000/api/contacts",
+      "http://"+url+":3000/api/contacts",
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -45,11 +46,11 @@ export default function DisplayContacts({ navigation }) {
         try {
           const [manualRes, defaultRes] = await Promise.all([
             fetch(
-              `http://192.168.16.106:3000/api/description/${c.contact_id}`,
+              `http://${url}:3000/api/description/${c.contact_id}`,
               { headers: { Authorization: `Bearer ${token}` } }
             ),
             fetch(
-              `http://192.168.16.106:3000/api/description/default/${c.phone}`,
+              `http://${url}:3000/api/description/default/${c.phone}`,
               { headers: { Authorization: `Bearer ${token}` } }
             ),
           ]);
@@ -76,7 +77,7 @@ export default function DisplayContacts({ navigation }) {
   } finally {
     setLoading(false);
   }
-}
+  }
 
 
   const filteredContacts = useMemo(() => {

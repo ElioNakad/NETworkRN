@@ -21,6 +21,7 @@ export default function MyDefaultDescription() {
 
   const [defaults, setDefaults] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
+  const url="192.168.16.106"
 
   // 🔹 FETCH DEFAULT DESCRIPTIONS
   const loadDefaults = useCallback(async () => {
@@ -31,7 +32,7 @@ export default function MyDefaultDescription() {
       if (!token) return;
 
       const res = await fetch(
-        "http://192.168.16.106:3000/api/description/get-default",
+        "http://"+url+":3000/api/description/get-default",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,7 +69,7 @@ export default function MyDefaultDescription() {
             if (!token) return;
 
             const res = await fetch(
-              `http://192.168.16.106:3000/api/description/default/${id}`,
+              `http://${url}:3000/api/description/default/${id}`,
               {
                 method: "DELETE",
                 headers: {
@@ -116,7 +117,7 @@ export default function MyDefaultDescription() {
       }
 
       const res = await fetch(
-        "http://192.168.16.106:3000/api/description/set-default",
+        "http://"+url+":3000/api/description/set-default",
         {
           method: "POST",
           headers: {

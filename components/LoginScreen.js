@@ -12,11 +12,14 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen({ navigation }) {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const url="192.168.16.106"
 
   async function login() {
+
     if (!email || !password) {
       Alert.alert("Error", "All fields are required");
       return;
@@ -26,7 +29,7 @@ export default function LoginScreen({ navigation }) {
 
     try {
       const res = await fetch(
-        "http://192.168.16.106:3000/api/auth/login",
+        "http://"+url+":3000/api/auth/login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -20,17 +20,15 @@ export default function ContactDetails({ route,navigation }) {
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
 
-  // 🔹 MANUAL DESCRIPTIONS
   const [descriptions, setDescriptions] = useState([]);
 
-  // 🔹 DEFAULT (REVIEWS)
   const [defaultDescriptions, setDefaultDescriptions] = useState([]);
 
   const [loading, setLoading] = useState(false);
+  const url="192.168.16.106"
 
-  // =============================
-  // 🔹 FETCH MANUAL DESCRIPTIONS
-  // =============================
+
+
   const loadDescriptions = useCallback(async () => {
     if (!contact) return;
 
@@ -39,7 +37,7 @@ export default function ContactDetails({ route,navigation }) {
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(
-        `http://192.168.16.106:3000/api/description/${contact.contact_id}`,
+        `http://${url}:3000/api/description/${contact.contact_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -58,9 +56,7 @@ export default function ContactDetails({ route,navigation }) {
     }
   }, [contact]);
 
-  // =============================
-  // 🔹 FETCH DEFAULT (REVIEWS)
-  // =============================
+
   const loadDefaultDescriptions = useCallback(async () => {
     if (!contact?.phone) return;
 
@@ -68,7 +64,7 @@ export default function ContactDetails({ route,navigation }) {
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(
-        `http://192.168.16.106:3000/api/description/default/${contact.phone}`,
+        `http://${url}:3000/api/description/default/${contact.phone}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -85,9 +81,7 @@ export default function ContactDetails({ route,navigation }) {
     }
   }, [contact]);
 
-  // =============================
-  // 🔹 WHATSAPP
-  // =============================
+ 
   const openWhatsApp = () => {
     if (!contact?.phone) return;
 
@@ -99,9 +93,7 @@ export default function ContactDetails({ route,navigation }) {
     );
   };
 
-  // =============================
-  // 🔹 DELETE MANUAL LABEL
-  // =============================
+
   const handleDelete = async (id) => {
     Alert.alert("Delete label", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
@@ -113,7 +105,7 @@ export default function ContactDetails({ route,navigation }) {
             const token = await AsyncStorage.getItem("token");
 
             const res = await fetch(
-              `http://192.168.16.106:3000/api/description/manual/${id}`,
+              `http://${url}:3000/api/description/manual/${id}`,
               {
                 method: "DELETE",
                 headers: {
@@ -136,9 +128,7 @@ export default function ContactDetails({ route,navigation }) {
     ]);
   };
 
-  // =============================
-  // 🔹 SAVE MANUAL LABEL
-  // =============================
+
   const handleSave = async () => {
     if (!label || !description) {
       Alert.alert("Error", "Both fields required");
@@ -147,7 +137,7 @@ export default function ContactDetails({ route,navigation }) {
 
     try {
       const res = await fetch(
-        "http://192.168.16.106:3000/api/description",
+        "http://"+url+":3000/api/description",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -202,13 +192,12 @@ export default function ContactDetails({ route,navigation }) {
            contact,
            defaultDescriptions,
           })
-      }
-    >
-       <Text style={styles.reviewsIcon}>⭐</Text>
-  <Text style={styles.reviewsText}>REVIEWS</Text>
-</TouchableOpacity>
-
-        )}
+        }
+        > 
+        <Text style={styles.reviewsIcon}>⭐</Text>
+        <Text style={styles.reviewsText}>REVIEWS</Text>
+         
+        </TouchableOpacity>)}
       </View>
 
       <Text style={styles.name}>{contact.display_name}</Text>
