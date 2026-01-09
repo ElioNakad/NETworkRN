@@ -24,7 +24,6 @@ export default function SignUpScreen() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [linkedin, setLinkedin] = useState("");
-  const [selectedDocument, setSelectedDocument] = useState(null);
 
   const url = "192.168.16.106";
 
