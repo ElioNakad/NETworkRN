@@ -157,6 +157,14 @@ const handleResync = () => {
         >
           <Text style={styles.buttonText}>Settings</Text>
         </TouchableOpacity>
+          
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("AI")}
+        >
+          <Text style={styles.buttonText}>AI</Text>
+        </TouchableOpacity>
+        
       </View>
     </View>
   );

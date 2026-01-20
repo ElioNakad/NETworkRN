@@ -11,6 +11,7 @@ import MyDefaultDescription from "./components/MyDefaultDescription";
 import Menu from "./components/Menu"
 import Review from "./components/Review"
 import Settings from "./components/Settings"
+import AI from "./components/AI"
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -27,6 +28,8 @@ export default function App() {
         <Stack.Screen name="Details" component={ContatDetails} />
         <Stack.Screen name="Reviews" component={Review} />
         <Stack.Screen name="Settings" component={Settings} />
+        <Stack.Screen name="AI" component={AI} />
+
 
       </Stack.Navigator>
     </NavigationContainer>

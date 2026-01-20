@@ -37,6 +37,10 @@ export default function Reviews({ route }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [review, setReview] = useState("");
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+
   const url="192.168.16.106"
 
   /* =============================
@@ -62,6 +66,8 @@ export default function Reviews({ route }) {
       if (!res.ok) throw new Error(data.message);
 
       setReviews(data.reviews);
+      setCurrentUserId(data.currentUserId);
+
     } catch (err) {
       Alert.alert("Error", err.message);
     } finally {
@@ -111,6 +117,53 @@ export default function Reviews({ route }) {
       setLoadingSubmit(false);
     }
   };
+
+  const deleteReview = async (reviewId) => {
+    console.log("DELETING review_id:", reviewId);
+  Alert.alert(
+    "Delete review",
+    "Are you sure you want to delete this review?",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const token = await AsyncStorage.getItem("token");
+
+            const res = await fetch(
+              `http://${url}:3000/api/review/delete-review/${reviewId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+              Alert.alert("Delete failed", data.message);
+              return;
+            }
+
+            // ✅ FIXED LINE
+            setReviews(prev =>
+              prev.filter(r => r.review_id !== reviewId)
+            );
+
+          } catch (err) {
+            Alert.alert("Delete failed", err.message);
+          }
+        },
+      },
+    ]
+  );
+};
+
+
 
   return (
     <View style={styles.container}>
@@ -183,7 +236,9 @@ export default function Reviews({ route }) {
             )}
 
             {!loadingReviews &&
-              reviews.map((r, index) => (
+              reviews.map((r, index) => {
+                const isMine = r.reviewer_id === currentUserId;
+                return(
                 <View key={r.review_id} style={styles.reviewCard}>
                   <View style={styles.reviewHeader}>
                     <View style={styles.avatarCircle}>
@@ -197,6 +252,15 @@ export default function Reviews({ route }) {
                       <Text style={styles.reviewer}>
                         {r.reviewer_fname} {r.reviewer_lname} {"\n"+r.reviewer_email}
                       </Text>
+
+                      {isMine && (
+                        <View style={styles.myBadge}>
+                         <TouchableOpacity onPress={() => deleteReview(r.review_id)}>
+                         <Text style={styles.myBadgeText}>🗑️</Text>
+                         </TouchableOpacity>
+                        </View>
+                      )}
+
                       <Text style={styles.reviewMeta}>
                         {formatDateTime(r.review_date)} · Review #{reviews.length - index}
                       </Text>
@@ -206,7 +270,9 @@ export default function Reviews({ route }) {
 
                   <Text style={styles.reviewText}>{r.review_text}</Text>
                 </View>
-              ))}
+              
+              )})
+            }
           </View>
         )}
 
