@@ -41,7 +41,7 @@ export default function Reviews({ route }) {
   const [currentUserId, setCurrentUserId] = useState(null);
 
 
-  const url="192.168.16.106"
+  const url="192.168.16.105"
 
   /* =============================
      🔹 FETCH REVIEWS

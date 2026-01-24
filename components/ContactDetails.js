@@ -19,13 +19,16 @@ export default function ContactDetails({ route,navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
+  const [isUser, setIsUser] = useState(false);
+const [checkingUser, setCheckingUser] = useState(false);
 
   const [descriptions, setDescriptions] = useState([]);
+const [linkedUser, setLinkedUser] = useState(null);
 
   const [defaultDescriptions, setDefaultDescriptions] = useState([]);
 
   const [loading, setLoading] = useState(false);
-  const url="192.168.16.106"
+  const url="192.168.16.105"
 
 
 
@@ -161,10 +164,37 @@ export default function ContactDetails({ route,navigation }) {
     }
   };
 
+const checkIfUserExists = useCallback(async () => {
+  if (!contact?.phone) return;
+
+  try {
+    const res = await fetch(
+      `http://${url}:3000/api/auth/check-phone`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: contact.phone }),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    setIsUser(data.exists);
+    setLinkedUser(data.user); // 👈 full user row
+  } catch (err) {
+    console.log("Check phone error:", err.message);
+  }
+}, [contact]);
+
+
+
   useEffect(() => {
     loadDescriptions();
     loadDefaultDescriptions();
-  }, [loadDescriptions, loadDefaultDescriptions]);
+    checkIfUserExists();
+  }, [loadDescriptions, loadDefaultDescriptions, checkIfUserExists]);
+
 
   if (!contact) {
     return (
@@ -200,8 +230,31 @@ export default function ContactDetails({ route,navigation }) {
         </TouchableOpacity>)}
       </View>
 
-      <Text style={styles.name}>{contact.display_name}</Text>
+<View style={{ flexDirection: "row", alignItems: "center" }}>
+  <Text style={styles.name}>{contact.display_name}</Text>
+
+  {!checkingUser && (
+    <Text
+      style={[
+        styles.userBadge,
+        { backgroundColor: isUser ? "#34C759" : "#8E8E93" },
+      ]}
+    >
+      {isUser ? "USER" : "NOT USER"}
+    </Text>
+  )}
+</View>
       <Text style={styles.phone}>{contact.phone}</Text>
+      {isUser && linkedUser?.linkedin && (
+  <TouchableOpacity
+    onPress={() => Linking.openURL(linkedUser.linkedin)}
+  >
+    <Text style={styles.linkedin}>
+      🔗 View LinkedIn Profile
+    </Text>
+  </TouchableOpacity>
+)}
+
 
       {/* ADD LABEL */}
       <TouchableOpacity
@@ -416,4 +469,20 @@ const styles = StyleSheet.create({
     color: "#FF3B30",
     marginTop: 12,
   },
+
+  userBadge: {
+  marginLeft: 8,
+  paddingHorizontal: 8,
+  paddingVertical: 3,
+  borderRadius: 10,
+  color: "white",
+  fontSize: 12,
+  fontWeight: "bold",
+},
+linkedin: {
+  color: "#0A66C2",
+  marginTop: 6,
+  fontWeight: "bold",
+},
+
 });

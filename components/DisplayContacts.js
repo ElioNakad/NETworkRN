@@ -16,7 +16,7 @@ export default function DisplayContacts({ navigation }) {
   const [contacts, setContacts] = useState([]);
   const [searchName, setSearchName] = useState("");
   const [loading, setLoading] = useState(true);
-  const url="192.168.16.106"
+  const url="192.168.16.105"
 
   useEffect(() => {
     loadContacts();

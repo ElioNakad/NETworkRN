@@ -16,7 +16,7 @@ export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const url="192.168.16.106"
+  const url="192.168.16.105"
 
   async function login() {
 
@@ -43,7 +43,6 @@ export default function LoginScreen({ navigation }) {
         throw new Error(data.message || "Login failed");
       }
 
-      // ✅ store JWT
       await AsyncStorage.setItem("token", data.token);
 
       Alert.alert("Success", `Welcome ${data.user.fname}`);

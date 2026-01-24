@@ -21,7 +21,7 @@ export default function MyDefaultDescription() {
 
   const [defaults, setDefaults] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
-  const url="192.168.16.106"
+  const url="192.168.16.105"
 
   // 🔹 FETCH DEFAULT DESCRIPTIONS
   const loadDefaults = useCallback(async () => {

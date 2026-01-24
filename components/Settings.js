@@ -19,7 +19,7 @@ export default function Settings() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [loadingCV, setLoadingCV] = useState(false);
 
-  const url = "192.168.16.106";
+  const url = "192.168.16.105";
 
   // 🔹 FETCH USER DATA
   useEffect(() => {

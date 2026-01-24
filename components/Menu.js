@@ -74,7 +74,7 @@ const doResync = async () => {
     console.log("📤 SENDING CONTACTS:", allContacts.length);
 
     const res = await fetch(
-      "http://192.168.16.106:3000/api/contacts/resync",
+      "http://192.168.16.105:3000/api/contacts/resync",
       {
         method: "POST",
         headers: {
