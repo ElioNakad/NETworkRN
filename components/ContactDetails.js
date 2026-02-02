@@ -231,7 +231,10 @@ const checkIfUserExists = useCallback(async () => {
       </View>
 
 <View style={{ flexDirection: "row", alignItems: "center" }}>
-  <Text style={styles.name}>{contact.display_name}</Text>
+  <View>
+    <Text style={styles.name}>{contact.display_name}</Text>
+    
+  </View>
 
   {!checkingUser && (
     <Text
@@ -245,15 +248,32 @@ const checkIfUserExists = useCallback(async () => {
   )}
 </View>
       <Text style={styles.phone}>{contact.phone}</Text>
-      {isUser && linkedUser?.linkedin && (
-  <TouchableOpacity
-    onPress={() => Linking.openURL(linkedUser.linkedin)}
-  >
-    <Text style={styles.linkedin}>
-      🔗 View LinkedIn Profile
-    </Text>
-  </TouchableOpacity>
+      {isUser && linkedUser && (
+  <View style={{ marginTop: 6 }}>
+    
+    {/* EMAIL */}
+    {linkedUser.email && (
+      <Text
+        style={styles.linkedin}
+        onPress={() => Linking.openURL(`mailto:${linkedUser.email}`)}
+      >
+        📧 {linkedUser.email}
+      </Text>
+    )}
+
+    {/* LINKEDIN */}
+    {linkedUser.linkedin && (
+      <Text
+        style={styles.linkedin}
+        onPress={() => Linking.openURL(linkedUser.linkedin)}
+      >
+        🔗 View LinkedIn Profile
+      </Text>
+    )}
+
+  </View>
 )}
+
 
 
       {/* ADD LABEL */}
