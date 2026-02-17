@@ -12,12 +12,15 @@ import Menu from "./components/Menu"
 import Review from "./components/Review"
 import Settings from "./components/Settings"
 import AI from "./components/AI"
+import AuthLoading from "./components/AuthLoadingScreen"
+import Referral from "./components/Referral"
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+      {/*  <Stack.Screen name="AuthLoading" component={AuthLoading}/>*/}
         <Stack.Screen name="LogIn" component={LoginScreen} />
         <Stack.Screen name="Menu" component={Menu} />
 
@@ -29,7 +32,7 @@ export default function App() {
         <Stack.Screen name="Reviews" component={Review} />
         <Stack.Screen name="Settings" component={Settings} />
         <Stack.Screen name="AI" component={AI} />
-
+        <Stack.Screen name="Referral" component={Referral} />
 
       </Stack.Navigator>
     </NavigationContainer>

@@ -101,7 +101,7 @@ const doResync = async () => {
   }
 };
 
-const handleResync = () => {
+ const handleResync = () => {
   Alert.alert(
     "Resync contacts",
     "This action will:\n\n" +
@@ -121,9 +121,9 @@ const handleResync = () => {
       },
     ]
   );
-};
+ };
 
-
+ 
 
   return (
     <View style={styles.container}>
@@ -133,6 +133,13 @@ const handleResync = () => {
         onPress={handleResync}
       >
         <Text style={styles.resyncText}>Resync Contacts</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.logOutButton}
+        onPress={()=>navigation.navigate("LogIn")}
+      >
+        <Text style={styles.resyncText}>LogOut</Text>
       </TouchableOpacity>
 
       {/* 🔹 CENTER BUTTONS */}
@@ -164,6 +171,13 @@ const handleResync = () => {
         >
           <Text style={styles.buttonText}>AI</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("Referral")}
+        >
+          <Text style={styles.buttonText}>Referral</Text>
+        </TouchableOpacity>
         
       </View>
     </View>
@@ -183,6 +197,16 @@ const styles = StyleSheet.create({
     top: 40,
     right: 20,
     backgroundColor: "#28a745",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+
+  logOutButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "red",
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,

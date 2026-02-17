@@ -1,42 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator,Linking,Alert } from "react-native";
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  FlatList, 
+  ActivityIndicator,
+  Alert,
+  Linking,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function AI() {
+export default function Referral() {
   const [prompt, setPrompt] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-
 
   const url = "192.168.16.105";
 
   async function search() {
-    if (!prompt.trim()) return;
-
-    setHasSearched(true); 
-    setLoading(true);
-    
-    try {
-      const token = await AsyncStorage.getItem("token");
-      const res = await fetch(`http://${url}:3000/api/ai/search`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ prompt })
-      });
-      const data = await res.json();
-      setResults(data);
-    } catch (error) {
-      console.error("Search error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function searchReferral() {
     if (!prompt.trim()) return;
 
     setLoading(true);
@@ -58,6 +40,7 @@ export default function AI() {
 
       const data = await res.json();
       setResults(data);
+
     } catch (error) {
       console.error("Referral search error:", error);
     } finally {
@@ -67,22 +50,24 @@ export default function AI() {
 
   const openWhatsApp = (nbr) => {
     if (!nbr) return;
-    
+  
     const phone = nbr.replace(/\s+/g, "");
     const url = `whatsapp://send?phone=${phone}`;
-    
-    Linking.openURL(url).catch(() =>
-      Alert.alert("WhatsApp not installed")
-    );
+  
+      Linking.openURL(url).catch(() =>
+        Alert.alert("WhatsApp not installed")
+      );
   };
-
 
   return (
     <View style={styles.container}>
+      
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>AI Search</Text>
-        <Text style={styles.headerSubtitle}>Powered by intelligent search</Text>
+        <Text style={styles.headerTitle}>Referral AI</Text>
+        <Text style={styles.headerSubtitle}>
+          Find someone who can refer you
+        </Text>
       </View>
 
       {/* Search Bar */}
@@ -91,7 +76,7 @@ export default function AI() {
           <Text style={styles.searchIcon}>🔎</Text>
           <TextInput
             style={styles.input}
-            placeholder="What are you looking for?"
+            placeholder="Who are you looking for?"
             placeholderTextColor="#9CA3AF"
             value={prompt}
             onChangeText={setPrompt}
@@ -99,8 +84,12 @@ export default function AI() {
             returnKeyType="search"
           />
         </View>
+
         <TouchableOpacity
-          style={[styles.searchButton, !prompt.trim() && styles.searchButtonDisabled]}
+          style={[
+            styles.searchButton,
+            (!prompt.trim() || loading) && styles.searchButtonDisabled
+          ]}
           onPress={search}
           disabled={!prompt.trim() || loading}
         >
@@ -112,16 +101,7 @@ export default function AI() {
         </TouchableOpacity>
       </View>
 
-      
-
-      {hasSearched && !loading && results.length === 0 && (
-        <TouchableOpacity style={styles.button} onPress={searchReferral}>       
-          <Text>want to search for a referral?</Text>
-        </TouchableOpacity>
-      )}
-
-
-      {/* Results List */}
+      {/* Results */}
       <FlatList
         data={results}
         keyExtractor={(item, i) => i.toString()}
@@ -131,11 +111,13 @@ export default function AI() {
             <View style={styles.cardHeader}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {item.name?.charAt(0)?.toUpperCase() || '?'}
+                  {item.name?.charAt(0)?.toUpperCase() || "?"}
                 </Text>
               </View>
+
               <View style={styles.cardHeaderText}>
                 <Text style={styles.name}>{item.name}</Text>
+
                 {item.phone && (
                   <View style={styles.phoneContainer}>
                     <Text style={styles.phoneIcon}>📞</Text>
@@ -144,6 +126,7 @@ export default function AI() {
                 )}
               </View>
             </View>
+
             {item.profile_text && (
               <View style={styles.profileSection}>
                 <Text style={styles.profileText} numberOfLines={3}>
@@ -151,8 +134,11 @@ export default function AI() {
                 </Text>
               </View>
             )}
+
             <View style={styles.cardFooter}>
-              <Text style={styles.resultNumber}>Result #{index + 1}</Text>
+              <Text style={styles.resultNumber}>
+                Result #{index + 1}
+              </Text>
             </View>
           </TouchableOpacity>
         )}

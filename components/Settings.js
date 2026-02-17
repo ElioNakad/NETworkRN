@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Switch
 } from "react-native";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,6 +19,7 @@ export default function Settings() {
   const [linkedin, setLinkedin] = useState("");
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [loadingCV, setLoadingCV] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
 
   const url = "192.168.16.105";
 
@@ -45,6 +47,8 @@ export default function Settings() {
       setFirstName(user.fname || "");
       setLastName(user.lname || "");
       setLinkedin(user.linkedin || "");
+
+      setIsEnabled(String(user.refer).toLowerCase() === "true");
     } catch (err) {
       Alert.alert("Error", err.message);
     }
@@ -52,10 +56,11 @@ export default function Settings() {
 
   // 🔹 UPDATE PROFILE
   const handleSaveProfile = async () => {
-    if (password.length < 8) {
+    if (password.trim() && password.length < 8) {
       Alert.alert("Error", "Password must be at least 8 characters");
       return;
     }
+
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
@@ -151,9 +156,48 @@ export default function Settings() {
     }
   };
 
+
+  const toggleRefer = async (value) => {
+    try {
+      setIsEnabled(value); // keep boolean for the Switch UI
+
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
+
+      const res = await fetch(
+        "http://" + url + ":3000/api/settings/change-refer",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            refer: value ? "true" : "false", // 👈 STRING, not boolean
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+    } catch (err) {
+      Alert.alert("Error", err.message);
+    }
+  };
+
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Settings</Text>
+
+
+      <Text>{isEnabled ? "REFER ON" : "REFER OFF"}</Text>
+
+      <Switch
+        value={isEnabled}
+        onValueChange={toggleRefer}
+      />
 
       {/* PROFILE SECTION */}
       <Text style={styles.section}>Profile</Text>
@@ -186,7 +230,6 @@ export default function Settings() {
         style={styles.input}
         placeholder="New Password"
         placeholderTextColor={"grey"}
-        secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
