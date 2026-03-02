@@ -69,9 +69,9 @@ export default function AI() {
     if (!nbr) return;
     
     const phone = nbr.replace(/\s+/g, "");
-    const url = `whatsapp://send?phone=${phone}`;
+    const url2 = `whatsapp://send?phone=${phone}`;
     
-    Linking.openURL(url).catch(() =>
+    Linking.openURL(url2).catch(() =>
       Alert.alert("WhatsApp not installed")
     );
   };

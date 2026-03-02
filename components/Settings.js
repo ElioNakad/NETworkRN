@@ -6,11 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Switch
+  Switch,
+  ImageBackground,
+  Image,
+  ScrollView,
+  Platform
 } from "react-native";
-import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { pick, types } from "@react-native-documents/picker";
+import logo from "../NETworkLogo.png";
 
 export default function Settings() {
   const [firstName, setFirstName] = useState("");
@@ -23,7 +27,6 @@ export default function Settings() {
 
   const url = "192.168.16.105";
 
-  // 🔹 FETCH USER DATA
   useEffect(() => {
     fetchUser();
   }, []);
@@ -35,9 +38,7 @@ export default function Settings() {
 
       const res = await fetch(
         "http://" + url + ":3000/api/settings/get-user",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const data = await res.json();
@@ -47,14 +48,12 @@ export default function Settings() {
       setFirstName(user.fname || "");
       setLastName(user.lname || "");
       setLinkedin(user.linkedin || "");
-
       setIsEnabled(String(user.refer).toLowerCase() === "true");
     } catch (err) {
       Alert.alert("Error", err.message);
     }
   };
 
-  // 🔹 UPDATE PROFILE
   const handleSaveProfile = async () => {
     if (password.trim() && password.length < 8) {
       Alert.alert("Error", "Password must be at least 8 characters");
@@ -95,15 +94,12 @@ export default function Settings() {
     }
   };
 
-  // 🔹 PICK CV
   const pickCV = async () => {
     try {
       const res = await pick({
         type: [types.pdf, types.doc, types.docx],
       });
-
-      const file = res[0];
-      setSelectedDocument(file);
+      setSelectedDocument(res[0]);
     } catch (err) {
       if (err.code !== "DOCUMENT_PICKER_CANCELED") {
         Alert.alert("Error", "Failed to pick file");
@@ -111,7 +107,6 @@ export default function Settings() {
     }
   };
 
-  // 🔹 UPLOAD CV
   const uploadCV = async () => {
     if (!selectedDocument) {
       Alert.alert("No CV", "Please select a CV first");
@@ -124,22 +119,19 @@ export default function Settings() {
 
       const formData = new FormData();
       formData.append("cv", {
-       uri:
-       Platform.OS === "android"
-        ? selectedDocument.uri
-        : selectedDocument.uri.replace("file://", ""),
-       name: selectedDocument.name,
-       type: selectedDocument.type || "application/pdf",
+        uri:
+          Platform.OS === "android"
+            ? selectedDocument.uri
+            : selectedDocument.uri.replace("file://", ""),
+        name: selectedDocument.name,
+        type: selectedDocument.type || "application/pdf",
       });
-
 
       const res = await fetch(
         "http://" + url + ":3000/api/settings/update-cv",
         {
           method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         }
       );
@@ -156,15 +148,14 @@ export default function Settings() {
     }
   };
 
-
   const toggleRefer = async (value) => {
     try {
-      setIsEnabled(value); // keep boolean for the Switch UI
+      setIsEnabled(value);
 
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
 
-      const res = await fetch(
+      await fetch(
         "http://" + url + ":3000/api/settings/change-refer",
         {
           method: "PUT",
@@ -173,143 +164,205 @@ export default function Settings() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            refer: value ? "true" : "false", // 👈 STRING, not boolean
+            refer: value ? "true" : "false",
           }),
         }
       );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
     } catch (err) {
       Alert.alert("Error", err.message);
     }
   };
 
-
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
+    <ImageBackground
+      source={logo}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
+    >
+      <View style={styles.overlay}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
 
+          <View style={styles.logoContainer}>
+            <Image source={logo} style={styles.logo} resizeMode="contain" />
+          </View>
 
-      <Text>{isEnabled ? "REFER ON" : "REFER OFF"}</Text>
+          <Text style={styles.title}>Settings</Text>
 
-      <Switch
-        value={isEnabled}
-        onValueChange={toggleRefer}
-      />
+          {/* REFER SWITCH */}
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchText}>
+              {isEnabled ? "Referral Enabled" : "Referral Disabled"}
+            </Text>
+            <Switch
+              value={isEnabled}
+              onValueChange={toggleRefer}
+              trackColor={{ false: "#444", true: "#059669" }}
+              thumbColor={"#fff"}
+            />
+          </View>
 
-      {/* PROFILE SECTION */}
-      <Text style={styles.section}>Profile</Text>
+          {/* PROFILE */}
+          <Text style={styles.section}>Profile</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="First Name"
-        placeholderTextColor={"grey"}
-        value={firstName}
-        onChangeText={setFirstName}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="First Name"
+            placeholderTextColor="#aaa"
+            value={firstName}
+            onChangeText={setFirstName}
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        placeholderTextColor={"grey"}
-        value={lastName}
-        onChangeText={setLastName}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Last Name"
+            placeholderTextColor="#aaa"
+            value={lastName}
+            onChangeText={setLastName}
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="LinkedIn"
-        placeholderTextColor={"grey"}
-        value={linkedin}
-        onChangeText={setLinkedin}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="LinkedIn"
+            placeholderTextColor="#aaa"
+            value={linkedin}
+            onChangeText={setLinkedin}
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="New Password"
-        placeholderTextColor={"grey"}
-        value={password}
-        onChangeText={setPassword}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="New Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-      <TouchableOpacity style={styles.primaryBtn} onPress={handleSaveProfile}>
-        <Text style={styles.primaryText}>Save Profile</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.primaryBtn} onPress={handleSaveProfile}>
+            <Text style={styles.primaryText}>Save Profile</Text>
+          </TouchableOpacity>
 
-      {/* CV SECTION */}
-      <Text style={styles.section}>CV section</Text>
+          {/* CV */}
+          <Text style={styles.section}>CV</Text>
 
-      <TouchableOpacity style={styles.outlineBtn} onPress={pickCV}>
-        <Text style={styles.outlineText}>
-          {selectedDocument ? selectedDocument.name : "Select CV (Only .pdf are supported)"}
-        </Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.outlineBtn} onPress={pickCV}>
+            <Text style={styles.outlineText}>
+              {selectedDocument
+                ? selectedDocument.name
+                : "Select CV (.pdf, .doc, .docx)"}
+            </Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[
-          styles.primaryBtn,
-          loadingCV && { backgroundColor: "#aaa" },
-        ]}
-        onPress={uploadCV}
-        disabled={loadingCV}
-      >
-        <Text style={styles.primaryText}>
-          {loadingCV ? "Uploading..." : "Upload CV"}
-        </Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity
+            style={[styles.primaryBtn, loadingCV && { opacity: 0.6 }]}
+            onPress={uploadCV}
+            disabled={loadingCV}
+          >
+            <Text style={styles.primaryText}>
+              {loadingCV ? "Uploading..." : "Upload CV"}
+            </Text>
+          </TouchableOpacity>
+
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: { flex: 1 },
+
+  backgroundImage: {
+    opacity: 0.8,
+    resizeMode: "contain",
+  },
+
+  overlay: {
     flex: 1,
-    padding: 22,
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(13,17,23,0.95)",
+    paddingHorizontal: 25,
   },
+
+  logoContainer: {
+    marginTop: 60,
+    alignItems: "center",
+  },
+
+  logo: {
+    width: 130,
+    height: 130,
+  },
+
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
+    color: "white",
     textAlign: "center",
+    marginBottom: 25,
   },
+
   section: {
     fontSize: 18,
     fontWeight: "bold",
+    color: "white",
     marginVertical: 15,
   },
+
   input: {
+    backgroundColor: "#161B22",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 15,
+    fontSize: 16,
+    marginBottom: 18,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderColor: "#30363D",
+    color: "white",
   },
+
   primaryBtn: {
-    backgroundColor: "#007bff",
-    padding: 14,
-    borderRadius: 8,
+    backgroundColor: "#4F46E5",
+    padding: 16,
+    borderRadius: 18,
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 20,
   },
+
   primaryText: {
-    color: "#fff",
+    color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
+
   outlineBtn: {
     borderWidth: 1,
-    borderColor: "#007bff",
+    borderColor: "#059669",
     padding: 14,
-    borderRadius: 8,
+    borderRadius: 18,
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 15,
   },
+
   outlineText: {
-    color: "#007bff",
+    color: "#059669",
     fontSize: 15,
-    fontWeight: "bold",
+    fontWeight: "600",
+  },
+
+  switchContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#161B22",
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#30363D",
+  },
+
+  switchText: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,102 +7,100 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
-  Linking,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DisplayContacts({ navigation }) {
-  const [contacts, setContacts] = useState([]);
   const [searchName, setSearchName] = useState("");
-  const [loading, setLoading] = useState(true);
-  const url="192.168.16.105"
+  const [token, setToken] = useState(null);
+  const url = "192.168.16.105";
 
+  // 🔥 Load token once
   useEffect(() => {
-    loadContacts();
+    AsyncStorage.getItem("token").then(setToken);
   }, []);
 
-  async function loadContacts() {
-  try {
-    const token = await AsyncStorage.getItem("token");
-    if (!token) {
-      Alert.alert("Error", "Not authenticated");
-      return;
-    }
+  const fetchContacts = async () => {
+    if (!token) throw new Error("Not authenticated");
 
-    const res = await fetch(
-      "http://"+url+":3000/api/contacts",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const res = await fetch(`http://${url}:3000/api/contacts`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.message);
 
-    // 🔹 ADD LABELS WITHOUT TOUCHING UI
     const enriched = await Promise.all(
       data.contacts.map(async (c) => {
         try {
-          const [manualRes, defaultRes] = await Promise.all([
-            fetch(
-              `http://${url}:3000/api/description/${c.contact_id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            ),
-            fetch(
-              `http://${url}:3000/api/description/default/${c.phone}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            ),
-          ]);
+          const [manualRes, defaultRes, privateRes] = await Promise.all([
+  fetch(
+    `http://${url}:3000/api/description/${c.contact_id}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  ),
+  fetch(
+    `http://${url}:3000/api/description/default/${c.phone}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  ),
+  fetch(
+    `http://${url}:3000/api/description/get-private/${c.contact_id}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  ),
+]);
 
-          const manual = await manualRes.json();
-          const defaults = await defaultRes.json();
+const manual = await manualRes.json();
+const defaults = await defaultRes.json();
+const privates = await privateRes.json();
 
-          return {
-            ...c,
-            labels: [
-              ...(manual.descriptions || []),
-              ...(defaults.descriptions || []),
-            ].map((d) => d.label.toLowerCase()),
-          };
+return {
+  ...c,
+  labels: [
+    ...(manual.descriptions || []),
+    ...(defaults.descriptions || []),
+    ...(privates.descriptions || []), // 🔥 THIS WAS MISSING
+  ].map((d) => d.label.toLowerCase()),
+};
         } catch {
           return { ...c, labels: [] };
         }
       })
     );
 
-    setContacts(enriched);
-  } catch (err) {
-    Alert.alert("Error", err.message);
-  } finally {
-    setLoading(false);
-  }
-  }
+    return enriched;
+  };
 
+  const {
+    data: contacts = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["contacts", token], // 🔥 FIXED
+    queryFn: fetchContacts,
+    enabled: !!token,              // 🔥 wait until token exists
+    staleTime: 1000 * 60 * 5,
+  });
 
   const filteredContacts = useMemo(() => {
-  const q = searchName.toLowerCase();
+    const q = searchName.toLowerCase();
 
-  return [...contacts]
-    .filter((c) =>
-      (c.display_name || "").toLowerCase().includes(q) ||
-      (c.phone || "").includes(searchName) ||
-      (c.labels || []).some((label) => label.includes(q))
-    )
-    .sort((a, b) =>
-      (a.display_name || "").localeCompare(b.display_name || "")
-    );
-}, [contacts, searchName]);
-
-
- 
+    return  [...contacts]
+      .filter((c) =>
+        (c.display_name || "").toLowerCase().includes(q) ||
+        (c.phone || "").includes(searchName) ||
+        (c.labels || []).some((label) => label.includes(q))
+      )
+      .sort((a, b) =>
+        (a.display_name || "").localeCompare(b.display_name || "")
+      );
+  }, [contacts, searchName]);
 
   const renderContact = ({ item }) => (
     <TouchableOpacity
       style={styles.contactItem}
       onPress={() =>
         navigation.navigate("Details", {
-        contact: item,
+          contact: item,
         })
       }
     >
@@ -113,16 +111,24 @@ export default function DisplayContacts({ navigation }) {
       </View>
 
       <View style={styles.contactInfo}>
-        <Text style={styles.contactName}>{item.display_name}{/*" "+item.user_contact_id*/} </Text>
+        <Text style={styles.contactName}>{item.display_name}</Text>
         <Text style={styles.contactPhone}>{item.phone}</Text>
       </View>
     </TouchableOpacity>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text>Error loading contacts</Text>
       </View>
     );
   }
@@ -137,13 +143,11 @@ export default function DisplayContacts({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>My Contacts</Text>
         <Text style={styles.count}>{contacts.length} contacts</Text>
       </View>
 
-      {/* SEARCH */}
       <TextInput
         style={styles.searchInput}
         placeholder="Search by name"
@@ -152,7 +156,6 @@ export default function DisplayContacts({ navigation }) {
         onChangeText={setSearchName}
       />
 
-      {/* LIST */}
       <FlatList
         data={filteredContacts}
         keyExtractor={(item) => item.contact_id.toString()}
@@ -161,6 +164,8 @@ export default function DisplayContacts({ navigation }) {
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

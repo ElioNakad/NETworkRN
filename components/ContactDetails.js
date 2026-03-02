@@ -28,6 +28,11 @@ const [linkedUser, setLinkedUser] = useState(null);
   const [defaultDescriptions, setDefaultDescriptions] = useState([]);
 
   const [loading, setLoading] = useState(false);
+
+  const [privateModalVisible, setPrivateModalVisible] = useState(false);
+const [privateLabel, setPrivateLabel] = useState("");
+const [privateDescription, setPrivateDescription] = useState("");
+const [privateDescriptions, setPrivateDescriptions] = useState([]);
   const url="192.168.16.105"
 
 
@@ -83,6 +88,30 @@ const [linkedUser, setLinkedUser] = useState(null);
       Alert.alert("Error", err.message);
     }
   }, [contact]);
+
+  const loadPrivateDescriptions = useCallback(async () => {
+  if (!contact) return;
+
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    const res = await fetch(
+      `http://${url}:3000/api/description/get-private/${contact.contact_id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    setPrivateDescriptions(data.descriptions);
+  } catch (err) {
+    Alert.alert("Error", err.message);
+  }
+}, [contact]);
 
  
   const openWhatsApp = () => {
@@ -164,6 +193,73 @@ const [linkedUser, setLinkedUser] = useState(null);
     }
   };
 
+  const handleSavePrivate = async () => {
+  if (!privateLabel || !privateDescription) {
+    Alert.alert("Error", "Both fields required");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `http://${url}:3000/api/description/insert-private`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_contact_id: contact.user_contact_id,
+          label: privateLabel,
+          description: privateDescription,
+        }),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    await loadPrivateDescriptions();
+
+    setPrivateLabel("");
+    setPrivateDescription("");
+    setPrivateModalVisible(false);
+  } catch (err) {
+    Alert.alert("Error", err.message);
+  }
+};
+
+const handlePrivateDelete = async (id) => {
+  Alert.alert("Delete private label", "Are you sure?", [
+    { text: "Cancel", style: "cancel" },
+    {
+      text: "Delete",
+      style: "destructive",
+      onPress: async () => {
+        try {
+          const token = await AsyncStorage.getItem("token");
+
+          const res = await fetch(
+            `http://${url}:3000/api/description/delete-private/${id}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message);
+
+          setPrivateDescriptions((prev) =>
+            prev.filter((item) => item.id !== id)
+          );
+        } catch (err) {
+          Alert.alert("Error", err.message);
+        }
+      },
+    },
+  ]);
+};
+
 const checkIfUserExists = useCallback(async () => {
   if (!contact?.phone) return;
 
@@ -192,8 +288,10 @@ const checkIfUserExists = useCallback(async () => {
   useEffect(() => {
     loadDescriptions();
     loadDefaultDescriptions();
+      loadPrivateDescriptions(); 
     checkIfUserExists();
-  }, [loadDescriptions, loadDefaultDescriptions, checkIfUserExists]);
+  }, [loadDescriptions, loadDefaultDescriptions,  loadPrivateDescriptions,
+, checkIfUserExists]);
 
 
   if (!contact) {
@@ -286,6 +384,15 @@ const checkIfUserExists = useCallback(async () => {
         </Text>
       </TouchableOpacity>
 
+      <TouchableOpacity
+  style={[styles.button, { backgroundColor: "#8E44AD" }]}
+  onPress={() => setPrivateModalVisible(true)}
+>
+  <Text style={{ color: "white" }}>
+    + Add Private Label
+  </Text>
+</TouchableOpacity>
+
       {/* DEFAULT LABELS */}
       <Text style={styles.sectionTitle}>Default Labels</Text>
 
@@ -299,6 +406,24 @@ const checkIfUserExists = useCallback(async () => {
           <Text>{item.description}</Text>
         </View>
       ))}
+
+      <Text style={styles.sectionTitle}>Private Labels</Text>
+
+{privateDescriptions.length === 0 && (
+  <Text style={styles.emptyText}>No private labels yet</Text>
+)}
+
+{privateDescriptions.map((item) => (
+  <View key={item.id} style={styles.privateCard}>
+    <View style={styles.manualHeader}>
+      <Text style={styles.privateLabel}>{item.label}</Text>
+      <TouchableOpacity onPress={() => handlePrivateDelete(item.id)}>
+        <Text style={styles.deleteIcon}>🗑️</Text>
+      </TouchableOpacity>
+    </View>
+    <Text>{item.description}</Text>
+  </View>
+))}
 
       {/* MANUAL LABELS */}
       <Text style={styles.sectionTitle}>Your Labels</Text>
@@ -355,6 +480,40 @@ const checkIfUserExists = useCallback(async () => {
           </View>
         </View>
       </Modal>
+
+      <Modal transparent visible={privateModalVisible} animationType="fade">
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>Add Private Label</Text>
+
+      <TextInput
+        placeholder="Private Label"
+        style={styles.input}
+        value={privateLabel}
+        onChangeText={setPrivateLabel}
+      />
+
+      <TextInput
+        placeholder="Private Description"
+        style={[styles.input, styles.textArea]}
+        value={privateDescription}
+        onChangeText={setPrivateDescription}
+        multiline
+      />
+
+      <TouchableOpacity
+        style={[styles.saveButton, { backgroundColor: "#8E44AD" }]}
+        onPress={handleSavePrivate}
+      >
+        <Text style={styles.saveText}>Save</Text>
+      </TouchableOpacity>
+
+      <Pressable onPress={() => setPrivateModalVisible(false)}>
+        <Text style={styles.cancelText}>Cancel</Text>
+      </Pressable>
+    </View>
+  </View>
+</Modal>
     </ScrollView>
   );
 }
@@ -504,5 +663,15 @@ linkedin: {
   marginTop: 6,
   fontWeight: "bold",
 },
+privateCard: {
+  backgroundColor: "#E8DAEF",
+  padding: 12,
+  borderRadius: 8,
+  marginTop: 8,
+},
 
+privateLabel: {
+  fontWeight: "bold",
+  color: "#6C3483",
+},
 });
