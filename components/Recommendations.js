@@ -7,16 +7,22 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Linking,
-  Alert
+  Alert,
+  SafeAreaView,
+  ImageBackground,
+  Image
 } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import BottomNav from "./BottomNav";
+import logo from "../NETworkLogo.png";
 
 export default function Recommendations({ navigation }) {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const url = "192.168.16.105"; // your node server IP
+  const url = "192.168.16.105";
 
   useEffect(() => {
     fetchRecommendations();
@@ -34,9 +40,7 @@ export default function Recommendations({ navigation }) {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message);
-      }
+      if (!res.ok) throw new Error(data.message);
 
       setRecommendations(data.recommendations);
     } catch (err) {
@@ -46,17 +50,14 @@ export default function Recommendations({ navigation }) {
     }
   };
 
-  // ✅ Open WhatsApp
   const openWhatsApp = (phone) => {
     if (!phone) {
       Alert.alert("Error", "No phone number available");
       return;
     }
 
-    // Remove non-numeric characters
     let cleanedPhone = phone.replace(/\D/g, "");
 
-    // If number starts with 0 (Lebanon), replace with 961
     if (cleanedPhone.startsWith("0")) {
       cleanedPhone = "961" + cleanedPhone.substring(1);
     }
@@ -68,100 +69,150 @@ export default function Recommendations({ navigation }) {
     });
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {item.name.charAt(0).toUpperCase()}
-        </Text>
-      </View>
+  const renderItem = ({ item }) => {
+    const match = (item.similarity_score * 100).toFixed(0);
 
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-
-        <Text style={styles.score}>
-          Match Score:{" "}
-          <Text style={styles.scoreValue}>
-            {(item.similarity_score * 100).toFixed(1)}%
+    return (
+      <View style={styles.card}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {item.name.charAt(0).toUpperCase()}
           </Text>
-        </Text>
+        </View>
 
-        {/* ✅ WhatsApp Button */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => openWhatsApp(item.phone)}
-        >
-          <Text style={styles.buttonText}>Message on WhatsApp</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+        <View style={styles.info}>
+          <View style={styles.topRow}>
+            <Text style={styles.name}>{item.name}</Text>
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#4f46e5" />
-      </View>
-    );
-  }
+            <View style={styles.matchBadge}>
+              <Text style={styles.matchText}>{match}%</Text>
+            </View>
+          </View>
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{error}</Text>
+          <Text style={styles.subtitle}>
+            AI Compatibility Score
+          </Text>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => openWhatsApp(item.phone)}
+          >
+            <Text style={styles.buttonText}>💬 Message</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
-  }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>AI Recommended People</Text>
+    <ImageBackground
+      source={logo}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
+    >
+      <View style={styles.overlay}>
+        <SafeAreaView style={{ flex: 1 }}>
 
-      {recommendations.length === 0 ? (
-        <Text style={styles.noData}>No recommendations available.</Text>
-      ) : (
-        <FlatList
-          data={recommendations}
-          keyExtractor={(item) => item.user_id.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 40 }}
-        />
-      )}
-    </View>
+          {/* LOGO */}
+          <View style={styles.logoContainer}>
+            <Image source={logo} style={styles.logo} resizeMode="contain" />
+          </View>
+
+          {/* HEADER */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>AI Recommendations</Text>
+            <Text style={styles.headerSubtitle}>
+              Discover people beyond your NETwork
+            </Text>
+          </View>
+
+          {loading ? (
+            <ActivityIndicator size="large" color="#6366F1" style={{ marginTop: 50 }} />
+          ) : error ? (
+            <Text style={styles.error}>{error}</Text>
+          ) : recommendations.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>🚀</Text>
+              <Text style={styles.emptyTitle}>No Matches Yet</Text>
+              <Text style={styles.emptyText}>
+                Try improving your default description to get better AI matches.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={recommendations}
+              keyExtractor={(item) => item.user_id.toString()}
+              renderItem={renderItem}
+              contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+
+          <BottomNav navigation={navigation} active="reco" />
+
+        </SafeAreaView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+
+  background: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f5f7fa"
   },
 
-  title: {
+  backgroundImage: {
+    opacity: 0.8,
+    resizeMode: "contain",
+  },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(13,17,23,0.95)",
+  },
+
+  logoContainer: {
+    alignItems: "center",
+    marginTop: 20
+  },
+
+  logo: {
+    width: 120,
+    height: 120
+  },
+
+  header: {
+    paddingHorizontal: 25,
+    paddingBottom: 10
+  },
+
+  headerTitle: {
     fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 20
+    fontWeight: "bold",
+    color: "white"
+  },
+
+  headerSubtitle: {
+    color: "#8B949E",
+    marginTop: 5
   },
 
   card: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 15,
+    backgroundColor: "#161B22",
+    borderRadius: 20,
+    padding: 18,
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "#21262D"
   },
 
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#4f46e5",
+    width: 65,
+    height: 65,
+    borderRadius: 35,
+    backgroundColor: "#4F46E5",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 15
@@ -169,56 +220,84 @@ const styles = StyleSheet.create({
 
   avatarText: {
     color: "white",
-    fontWeight: "bold",
-    fontSize: 18
+    fontSize: 24,
+    fontWeight: "bold"
   },
 
   info: {
     flex: 1
   },
 
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+
   name: {
-    fontSize: 16,
-    fontWeight: "600"
+    fontSize: 18,
+    fontWeight: "600",
+    color: "white"
   },
 
-  score: {
-    marginTop: 4,
-    color: "#666"
+  matchBadge: {
+    backgroundColor: "#22C55E",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20
   },
 
-  scoreValue: {
+  matchText: {
+    color: "white",
     fontWeight: "bold",
-    color: "#000"
+    fontSize: 13
+  },
+
+  subtitle: {
+    color: "#8B949E",
+    marginTop: 6,
+    fontSize: 13
   },
 
   button: {
-    marginTop: 10,
+    marginTop: 12,
     backgroundColor: "#25D366",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignSelf: "flex-start"
+    paddingVertical: 9,
+    borderRadius: 12,
+    alignItems: "center"
   },
 
   buttonText: {
     color: "white",
-    fontSize: 13,
     fontWeight: "600"
   },
 
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-
   error: {
-    color: "red"
+    color: "red",
+    textAlign: "center",
+    marginTop: 50
   },
 
-  noData: {
-    color: "#666",
-    marginTop: 20
+  emptyState: {
+    alignItems: "center",
+    marginTop: 100,
+    paddingHorizontal: 40
+  },
+
+  emptyEmoji: {
+    fontSize: 50
+  },
+
+  emptyTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 15
+  },
+
+  emptyText: {
+    color: "#8B949E",
+    textAlign: "center",
+    marginTop: 10
   }
 });

@@ -342,36 +342,55 @@ export default function Reviews({ route }) {
    🔹 STYLES
 ============================= */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f7fa" },
+  container: {
+    flex: 1,
+    backgroundColor: "rgba(13,17,23,0.97)",
+  },
 
   header: {
-    backgroundColor: "#fff",
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    elevation: 4,
   },
 
-  title: { fontSize: 28, fontWeight: "700" },
-  contactName: { fontSize: 16, color: "#666" },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "white",
+  },
 
-  section: { paddingHorizontal: 20, paddingTop: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 16 },
+  contactName: {
+    fontSize: 16,
+    color: "#aaa",
+    marginTop: 4,
+  },
+
+  section: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 16,
+    color: "white",
+  },
+
+  /* ================= LABELS ================= */
 
   labelCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#161B22",
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 18,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "#e8ecf1",
+    borderWidth: 1,
+    borderColor: "#30363D",
   },
 
   activeLabel: {
-    borderColor: "#f5b400",
-    backgroundColor: "#fffbf0",
+    borderColor: "#4F46E5",
+    backgroundColor: "#1E1B3A",
   },
 
   labelHeader: {
@@ -379,13 +398,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  label: { fontSize: 16, fontWeight: "700" },
-  activeLabelText: { color: "#f5b400" },
+  label: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "white",
+  },
 
-  description: { color: "#666", marginTop: 6 },
+  activeLabelText: {
+    color: "#4F46E5",
+  },
+
+  description: {
+    color: "#aaa",
+    marginTop: 6,
+  },
 
   selectedBadge: {
-    backgroundColor: "#f5b400",
+    backgroundColor: "#4F46E5",
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -393,7 +422,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  selectedBadgeText: { color: "#fff", fontWeight: "700" },
+  selectedBadgeText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+
+  /* ================= REVIEWS ================= */
 
   reviewsHeader: {
     flexDirection: "row",
@@ -401,7 +435,7 @@ const styles = StyleSheet.create({
   },
 
   categoryBadge: {
-    backgroundColor: "#f5b400",
+    backgroundColor: "#4F46E5",
     color: "#fff",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -411,42 +445,89 @@ const styles = StyleSheet.create({
   },
 
   reviewCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#161B22",
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 18,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#30363D",
   },
 
-  reviewHeader: { flexDirection: "row", marginBottom: 12 },
+  reviewHeader: {
+    flexDirection: "row",
+    marginBottom: 12,
+  },
 
   avatarCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f5b400",
+    backgroundColor: "#4F46E5",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
 
-  avatarText: { color: "#fff", fontWeight: "700" },
+  avatarText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
 
-  reviewer: { fontWeight: "700" },
-  reviewMeta: { fontSize: 12, color: "#999" },
+  reviewer: {
+    fontWeight: "700",
+    color: "white",
+  },
 
-  reviewText: { marginTop: 6, color: "#444", lineHeight: 22 },
+  reviewMeta: {
+    fontSize: 12,
+    color: "#777",
+    marginTop: 4,
+  },
 
-  loadingContainer: { alignItems: "center", paddingVertical: 40 },
-  loadingText: { marginTop: 12 },
+  reviewText: {
+    marginTop: 6,
+    color: "#ccc",
+    lineHeight: 22,
+  },
 
-  emptyContainer: { alignItems: "center", paddingVertical: 60 },
-  emptyIcon: { fontSize: 48 },
+  /* ================= LOADING & EMPTY ================= */
+
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+
+  loadingText: {
+    marginTop: 12,
+    color: "#aaa",
+  },
+
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 60,
+  },
+
+  emptyIcon: {
+    fontSize: 48,
+  },
+
+  emptyText: {
+    color: "white",
+    fontWeight: "600",
+  },
+
+  emptySubtext: {
+    color: "#777",
+    marginTop: 6,
+  },
+
+  /* ================= FAB ================= */
 
   fab: {
     position: "absolute",
     right: 20,
     bottom: 24,
-    backgroundColor: "#f5b400",
+    backgroundColor: "#4F46E5",
     width: 64,
     height: 64,
     borderRadius: 32,
@@ -455,19 +536,26 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
 
-  fabText: { fontSize: 28 },
+  fabText: {
+    fontSize: 26,
+    color: "white",
+  },
+
+  /* ================= MODAL ================= */
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "flex-end",
   },
 
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "#161B22",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
+    borderWidth: 1,
+    borderColor: "#30363D",
   },
 
   modalHeader: {
@@ -475,21 +563,29 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  modalTitle: { fontSize: 22, fontWeight: "700" },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "white",
+  },
 
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#30363D",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  closeButtonText: {
+    color: "white",
   },
 
   modalCategoryTag: {
     marginTop: 12,
     marginBottom: 16,
-    borderColor: "#f5b400",
+    borderColor: "#4F46E5",
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -497,25 +593,37 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
 
-  modalCategoryText: { color: "#f5b400", fontWeight: "600" },
+  modalCategoryText: {
+    color: "#4F46E5",
+    fontWeight: "600",
+  },
 
   input: {
     borderWidth: 1,
-    borderColor: "#e8ecf1",
-    borderRadius: 16,
+    borderColor: "#30363D",
+    borderRadius: 18,
     padding: 16,
     minHeight: 140,
+    backgroundColor: "#0D1117",
+    color: "white",
   },
 
-  charCount: { textAlign: "right", color: "#999", marginTop: 6 },
+  charCount: {
+    textAlign: "right",
+    color: "#777",
+    marginTop: 6,
+  },
 
   submitButton: {
-    backgroundColor: "#f5b400",
+    backgroundColor: "#4F46E5",
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 18,
     marginTop: 20,
     alignItems: "center",
   },
 
-  submitText: { color: "#fff", fontWeight: "700" },
+  submitText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
 });

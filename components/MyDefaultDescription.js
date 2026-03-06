@@ -10,41 +10,35 @@ import {
   Platform,
   ActivityIndicator,
   FlatList,
+  ImageBackground,
+  Image,
+  ScrollView
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native";
-
-export default function MyDefaultDescription() {
+import logo from "../NETworkLogo.png";
+import BottomNav from "./BottomNav";
+export default function MyDefaultDescription({navigation}) {
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [defaults, setDefaults] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
-  const url="192.168.16.105"
 
-  // 🔹 FETCH DEFAULT DESCRIPTIONS
+  const url = "192.168.16.105";
+
   const loadDefaults = useCallback(async () => {
     try {
       setLoadingList(true);
-
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
 
       const res = await fetch(
-        "http://"+url+":3000/api/description/get-default",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `http://${url}:3000/api/description/get-default`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to load");
-      }
+      if (!res.ok) throw new Error(data.message);
 
       setDefaults(data.descriptions || []);
     } catch (err) {
@@ -54,53 +48,10 @@ export default function MyDefaultDescription() {
     }
   }, []);
 
-  const handleDelete = async (id) => {
-  Alert.alert(
-    "Delete",
-    "Are you sure you want to delete this description?",
-    [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const token = await AsyncStorage.getItem("token");
-            if (!token) return;
-
-            const res = await fetch(
-              `http://${url}:3000/api/description/default/${id}`,
-              {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-
-            const data = await res.json();
-
-            if (!res.ok) {
-              throw new Error(data.message || "Delete failed");
-            }
-
-            // 🔁 Refresh list after delete
-            loadDefaults();
-          } catch (err) {
-            Alert.alert("Error", err.message);
-          }
-        },
-      },
-    ]
-  );
-};
-
-
   useEffect(() => {
     loadDefaults();
   }, [loadDefaults]);
 
-  // 🔹 SUBMIT NEW DEFAULT
   const handleSubmit = async () => {
     if (!label || !description) {
       Alert.alert("Error", "Please fill all fields");
@@ -109,15 +60,11 @@ export default function MyDefaultDescription() {
 
     try {
       setLoading(true);
-
       const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        Alert.alert("Error", "Not authenticated");
-        return;
-      }
+      if (!token) return;
 
       const res = await fetch(
-        "http://"+url+":3000/api/description/set-default",
+        `http://${url}:3000/api/description/set-default`,
         {
           method: "POST",
           headers: {
@@ -129,16 +76,10 @@ export default function MyDefaultDescription() {
       );
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
 
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to save");
-      }
-
-      Alert.alert("Success", "Default description saved");
       setLabel("");
       setDescription("");
-
-      // 🔁 Refresh list
       loadDefaults();
     } catch (err) {
       Alert.alert("Error", err.message);
@@ -147,142 +88,215 @@ export default function MyDefaultDescription() {
     }
   };
 
-  
+  const handleDelete = async (id) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
 
-  // 🔹 RENDER ITEM
+      await fetch(
+        `http://${url}:3000/api/description/default/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      loadDefaults();
+    } catch (err) {
+      Alert.alert("Error", err.message);
+    }
+  };
+
   const renderItem = ({ item }) => (
-  <View style={styles.card}>
-    <View style={styles.cardHeader}>
-      <Text style={styles.cardLabel}>{item.label}</Text>
-
-      <TouchableOpacity onPress={() => handleDelete(item.id)}>
-        <Text style={styles.deleteIcon}>🗑️</Text>
-      </TouchableOpacity>
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardLabel}>{item.label}</Text>
+        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+          <Text style={styles.deleteIcon}>🗑️</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.cardDescription}>{item.description}</Text>
     </View>
-
-    <Text style={styles.cardDescription}>{item.description}</Text>
-  </View>
-);
-
+  );
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+    <ImageBackground
+      source={logo}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
     >
-      <Text style={styles.title}>Add Default Description</Text>
+      <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <ScrollView>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Label"
-        value={label}
-        onChangeText={setLabel}
-      />
+            <View style={styles.logoContainer}>
+              <Image source={logo} style={styles.logo} resizeMode="contain" />
+            </View>
 
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
+            <Text style={styles.title}>Default Descriptions</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Save</Text>
-        )}
-      </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Label"
+              placeholderTextColor="#aaa"
+              value={label}
+              onChangeText={setLabel}
+            />
 
-      <Text style={styles.sectionTitle}>My Default Descriptions</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Description"
+              placeholderTextColor="#aaa"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+            />
 
-      {loadingList ? (
-        <ActivityIndicator />
-      ) : (
-        <FlatList
-          data={defaults}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={renderItem}
-          ListEmptyComponent={
-            <Text style={styles.empty}>No default descriptions yet</Text>
-          }
-        />
-      )}
-    </KeyboardAvoidingView>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.primaryText}>Save</Text>
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.sectionTitle}>My Defaults</Text>
+
+            {loadingList ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <FlatList
+                data={defaults}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderItem}
+                scrollEnabled={false}
+                ListEmptyComponent={
+                  <Text style={styles.empty}>
+                    No default descriptions yet
+                  </Text>
+                }
+              />
+            )}
+
+          </ScrollView>
+        </KeyboardAvoidingView>
+        <BottomNav navigation={navigation} active="default" />
+        
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
+  background: { flex: 1 },
+
+  backgroundImage: {
+    opacity: 0.8,
+    resizeMode: "contain",
   },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(13,17,23,0.95)",
+    paddingHorizontal: 25,
+  },
+
+  logoContainer: {
+    marginTop: 60,
+    alignItems: "center",
+  },
+
+  logo: {
+    width: 120,
+    height: 120,
+  },
+
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 20,
+    color: "white",
     textAlign: "center",
+    marginBottom: 25,
   },
+
   input: {
+    backgroundColor: "#161B22",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 15,
+    fontSize: 16,
+    marginBottom: 18,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderColor: "#30363D",
+    color: "white",
   },
+
   textArea: {
-    height: 100,
+    height: 110,
     textAlignVertical: "top",
   },
-  button: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 8,
+
+  primaryBtn: {
+    backgroundColor: "#4F46E5",
+    padding: 16,
+    borderRadius: 18,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 25,
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  card: {
-    backgroundColor: "#f1f1f1",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  cardLabel: {
+
+  primaryText: {
+    color: "white",
     fontWeight: "bold",
     fontSize: 16,
   },
-  cardDescription: {
-    marginTop: 4,
-    color: "#555",
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 15,
   },
+
+  card: {
+    backgroundColor: "#161B22",
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#30363D",
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  cardLabel: {
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "white",
+  },
+
+  cardDescription: {
+    marginTop: 6,
+    color: "#ccc",
+  },
+
+  deleteIcon: {
+    fontSize: 18,
+  },
+
   empty: {
     textAlign: "center",
-    color: "#888",
+    color: "#aaa",
     marginTop: 20,
   },
-  cardHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-},
-
-deleteIcon: {
-  fontSize: 18,
-  color: "red",
-},
-
 });

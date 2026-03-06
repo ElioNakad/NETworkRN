@@ -14,6 +14,7 @@ import Settings from "./components/Settings";
 import AI from "./components/AI";
 import Referral from "./components/Referral";
 import Recommendations from "./components/Recommendations"
+import AddContactScreen from "./components/AddContactScreen"
 const Stack = createNativeStackNavigator();
 
 // 🔥 Create Query Client
@@ -35,6 +36,7 @@ export default function App() {
           <Stack.Screen name="AI" component={AI} />
           <Stack.Screen name="Referral" component={Referral} />
           <Stack.Screen name="Recommendations" component={Recommendations} />
+          <Stack.Screen name="AddContactScreen" component={AddContactScreen} />        
         </Stack.Navigator>
       </NavigationContainer>
     </QueryClientProvider>

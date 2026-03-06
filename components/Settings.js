@@ -15,8 +15,8 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { pick, types } from "@react-native-documents/picker";
 import logo from "../NETworkLogo.png";
-
-export default function Settings() {
+import BottomNav from "./BottomNav";
+export default function Settings({navigation}) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
@@ -263,6 +263,9 @@ export default function Settings() {
           </TouchableOpacity>
 
         </ScrollView>
+
+                <BottomNav navigation={navigation} active="settings" />
+        
       </View>
     </ImageBackground>
   );
@@ -272,7 +275,7 @@ const styles = StyleSheet.create({
   background: { flex: 1 },
 
   backgroundImage: {
-    opacity: 0.8,
+    opacity: 1,
     resizeMode: "contain",
   },
 

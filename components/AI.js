@@ -1,6 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator,Linking,Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  Linking,
+  Alert,
+  ImageBackground,
+  Image,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import logo from "../NETworkLogo.png";
 
 export default function AI() {
   const [prompt, setPrompt] = useState("");
@@ -8,17 +23,17 @@ export default function AI() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-
   const url = "192.168.16.105";
 
   async function search() {
     if (!prompt.trim()) return;
 
-    setHasSearched(true); 
+    setHasSearched(true);
     setLoading(true);
-    
+
     try {
       const token = await AsyncStorage.getItem("token");
+
       const res = await fetch(`http://${url}:3000/api/ai/search`, {
         method: "POST",
         headers: {
@@ -27,10 +42,11 @@ export default function AI() {
         },
         body: JSON.stringify({ prompt })
       });
+
       const data = await res.json();
       setResults(data);
     } catch (error) {
-      console.error("Search error:", error);
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -59,7 +75,7 @@ export default function AI() {
       const data = await res.json();
       setResults(data);
     } catch (error) {
-      console.error("Referral search error:", error);
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -67,282 +83,195 @@ export default function AI() {
 
   const openWhatsApp = (nbr) => {
     if (!nbr) return;
-    
+
     const phone = nbr.replace(/\s+/g, "");
     const url2 = `whatsapp://send?phone=${phone}`;
-    
+
     Linking.openURL(url2).catch(() =>
       Alert.alert("WhatsApp not installed")
     );
   };
 
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>AI Search</Text>
-        <Text style={styles.headerSubtitle}>Powered by intelligent search</Text>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputWrapper}>
-          <Text style={styles.searchIcon}>🔎</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="What are you looking for?"
-            placeholderTextColor="#9CA3AF"
-            value={prompt}
-            onChangeText={setPrompt}
-            onSubmitEditing={search}
-            returnKeyType="search"
-          />
-        </View>
-        <TouchableOpacity
-          style={[styles.searchButton, !prompt.trim() && styles.searchButtonDisabled]}
-          onPress={search}
-          disabled={!prompt.trim() || loading}
+    <ImageBackground
+      source={logo}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
+    >
+      <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Text style={styles.searchButtonText}>Search</Text>
-          )}
-        </TouchableOpacity>
-      </View>
 
-      
+          {/* LOGO */}
+          <View style={styles.logoContainer}>
+            <Image source={logo} style={styles.logo} resizeMode="contain" />
+          </View>
 
-      {hasSearched && !loading && results.length === 0 && (
-        <TouchableOpacity style={styles.button} onPress={searchReferral}>       
-          <Text>want to search for a referral?</Text>
-        </TouchableOpacity>
-      )}
+          {/* SEARCH SECTION */}
+          <View style={styles.formContainer}>
+            <Text style={styles.title}>AI Search</Text>
 
+            <TextInput
+              style={styles.input}
+              placeholder="What are you looking for?"
+              placeholderTextColor="#aaa"
+              value={prompt}
+              onChangeText={setPrompt}
+              onSubmitEditing={search}
+            />
 
-      {/* Results List */}
-      <FlatList
-        data={results}
-        keyExtractor={(item, i) => i.toString()}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item, index }) => (
-          <TouchableOpacity style={styles.resultCard} onPress={()=>openWhatsApp(item.phone)}>
-            <View style={styles.cardHeader}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {item.name?.charAt(0)?.toUpperCase() || '?'}
-                </Text>
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.name}>{item.name}</Text>
-                {item.phone && (
-                  <View style={styles.phoneContainer}>
-                    <Text style={styles.phoneIcon}>📞</Text>
-                    <Text style={styles.phone}>{item.phone}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            {item.profile_text && (
-              <View style={styles.profileSection}>
-                <Text style={styles.profileText} numberOfLines={3}>
-                  {item.profile_text}
-                </Text>
-              </View>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={search}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.loginText}>Search</Text>
+              )}
+            </TouchableOpacity>
+
+            {hasSearched && !loading && results.length === 0 && (
+              <TouchableOpacity
+                style={[styles.loginButton, { marginTop: 15, backgroundColor: "#00d1b2" }]}
+                onPress={searchReferral}
+              >
+                <Text style={styles.loginText}>Search for Referral Instead</Text>
+              </TouchableOpacity>
             )}
-            <View style={styles.cardFooter}>
-              <Text style={styles.resultNumber}>Result #{index + 1}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
-    </View>
+          </View>
+
+          {/* RESULTS */}
+          <FlatList
+            data={results}
+            keyExtractor={(item, i) => i.toString()}
+            contentContainerStyle={{ paddingHorizontal: 25, paddingBottom: 40 }}
+            renderItem={({ item, index }) => (
+              <TouchableOpacity
+                style={styles.resultCard}
+                onPress={() => openWhatsApp(item.phone)}
+              >
+                <Text style={styles.resultName}>{item.name}</Text>
+
+                {item.phone && (
+                  <Text style={styles.resultPhone}>📞 {item.phone}</Text>
+                )}
+
+                {item.profile_text && (
+                  <Text style={styles.resultText} numberOfLines={3}>
+                    {item.profile_text}
+                  </Text>
+                )}
+
+                <Text style={styles.resultIndex}>Result #{index + 1}</Text>
+              </TouchableOpacity>
+            )}
+          />
+
+        </KeyboardAvoidingView>
+      </View>
+    </ImageBackground>
   );
 }
 
-const styles = {
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  header: {
-    backgroundColor: "#fff",
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  searchContainer: {
-    padding: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  searchInputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  searchIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#111827",
-  },
-  searchButton: {
-    backgroundColor: "#3B82F6",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 50,
-  },
-  searchButtonDisabled: {
-    backgroundColor: "#93C5FD",
-  },
-  searchButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  resultsHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  resultsCount: {
-    fontSize: 14,
-    color: "#6B7280",
-    fontWeight: "500",
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  resultCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#3B82F6",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  avatarText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  cardHeaderText: {
+const styles = StyleSheet.create({
+  background: {
     flex: 1,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
-    marginBottom: 4,
+
+  backgroundImage: {
+    opacity: 0.8,
+    resizeMode: "contain",
   },
-  phoneContainer: {
-    flexDirection: "row",
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(13,17,23,0.95)",
+  },
+
+  logoContainer: {
+    marginTop: 60,
     alignItems: "center",
   },
-  phoneIcon: {
-    fontSize: 12,
-    marginRight: 6,
+
+  logo: {
+    width: 140,
+    height: 140,
   },
-  phone: {
-    fontSize: 14,
-    color: "#6B7280",
+
+  formContainer: {
+    paddingHorizontal: 30,
+    marginTop: 20,
   },
-  profileSection: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  profileText: {
-    fontSize: 14,
-    color: "#374151",
-    lineHeight: 20,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  resultNumber: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    fontWeight: "500",
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 80,
-    paddingHorizontal: 40,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-    opacity: 0.5,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#111827",
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#6B7280",
+
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 20,
     textAlign: "center",
-    lineHeight: 20,
   },
-  button: {
-    backgroundColor: '#007AFF',
+
+  input: {
+    backgroundColor: "#161B22",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 15,
+    fontSize: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#30363D",
+    color: "white",
+  },
+
+  loginButton: {
+    backgroundColor: "#4F46E5",
+    padding: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    elevation: 5,
+  },
+
+  loginText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+  resultCard: {
+    backgroundColor: "#161B22",
+    borderRadius: 15,
     padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#30363D",
   },
-};
+
+  resultName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 5,
+  },
+
+  resultPhone: {
+    fontSize: 14,
+    color: "#00d1b2",
+    marginBottom: 5,
+  },
+
+  resultText: {
+    fontSize: 14,
+    color: "#C9D1D9",
+    marginBottom: 10,
+  },
+
+  resultIndex: {
+    fontSize: 12,
+    color: "#8B949E",
+    textAlign: "right",
+  },
+});

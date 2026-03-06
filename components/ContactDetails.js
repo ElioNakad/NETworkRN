@@ -303,8 +303,10 @@ const checkIfUserExists = useCallback(async () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* AVATAR + REVIEWS BUTTON */}
+  <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <View style={styles.overlay}>
+
+      {/* AVATAR */}
       <View style={styles.avatarRow}>
         <TouchableOpacity style={styles.avatar} onPress={openWhatsApp}>
           <Text style={styles.avatarText}>
@@ -314,84 +316,81 @@ const checkIfUserExists = useCallback(async () => {
 
         {defaultDescriptions.length > 0 && (
           <TouchableOpacity
-           style={styles.reviewsButton}
-           onPress={() =>
-           navigation.navigate("Reviews", {
-           contact,
-           defaultDescriptions,
-          })
-        }
-        > 
-        <Text style={styles.reviewsIcon}>⭐</Text>
-        <Text style={styles.reviewsText}>REVIEWS</Text>
-         
-        </TouchableOpacity>)}
+            style={styles.reviewsButton}
+            onPress={() =>
+              navigation.navigate("Reviews", {
+                contact,
+                defaultDescriptions,
+              })
+            }
+          >
+            <Text style={styles.reviewsIcon}>⭐</Text>
+            <Text style={styles.reviewsText}>REVIEWS</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-<View style={{ flexDirection: "row", alignItems: "center" }}>
-  <View>
-    <Text style={styles.name}>{contact.display_name}</Text>
-    
-  </View>
+      {/* NAME + BADGE */}
+      <View style={styles.nameRow}>
+        <Text style={styles.name}>{contact.display_name}</Text>
 
-  {!checkingUser && (
-    <Text
-      style={[
-        styles.userBadge,
-        { backgroundColor: isUser ? "#34C759" : "#8E8E93" },
-      ]}
-    >
-      {isUser ? "USER" : "NOT USER"}
-    </Text>
-  )}
-</View>
+        {!checkingUser && (
+          <Text
+            style={[
+              styles.userBadge,
+              {
+                backgroundColor: isUser ? "#34C759" : "#30363D",
+              },
+            ]}
+          >
+            {isUser ? "USER" : "NOT USER"}
+          </Text>
+        )}
+      </View>
+
       <Text style={styles.phone}>{contact.phone}</Text>
+
+      {/* LINKED INFO */}
       {isUser && linkedUser && (
-  <View style={{ marginTop: 6 }}>
-    
-    {/* EMAIL */}
-    {linkedUser.email && (
-      <Text
-        style={styles.linkedin}
-        onPress={() => Linking.openURL(`mailto:${linkedUser.email}`)}
-      >
-        📧 {linkedUser.email}
-      </Text>
-    )}
+        <View style={{ marginTop: 10 }}>
+          {linkedUser.email && (
+            <Text
+              style={styles.link}
+              onPress={() => Linking.openURL(`mailto:${linkedUser.email}`)}
+            >
+              📧 {linkedUser.email}
+            </Text>
+          )}
 
-    {/* LINKEDIN */}
-    {linkedUser.linkedin && (
-      <Text
-        style={styles.linkedin}
-        onPress={() => Linking.openURL(linkedUser.linkedin)}
-      >
-        🔗 View LinkedIn Profile
-      </Text>
-    )}
+          {linkedUser.linkedin && (
+            <Text
+              style={styles.link}
+              onPress={() => Linking.openURL(linkedUser.linkedin)}
+            >
+              🔗 View LinkedIn Profile
+            </Text>
+          )}
+        </View>
+      )}
 
-  </View>
-)}
-
-
-
-      {/* ADD LABEL */}
+      {/* BUTTONS */}
       <TouchableOpacity
-        style={styles.button}
+        style={styles.primaryButton}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={{ color: "white" }}>
-          + Add label to {contact.display_name}
+        <Text style={styles.buttonText}>
+          + Add Label
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-  style={[styles.button, { backgroundColor: "#8E44AD" }]}
-  onPress={() => setPrivateModalVisible(true)}
->
-  <Text style={{ color: "white" }}>
-    + Add Private Label
-  </Text>
-</TouchableOpacity>
+        style={styles.secondaryButton}
+        onPress={() => setPrivateModalVisible(true)}
+      >
+        <Text style={styles.buttonText}>
+          + Add Private Label
+        </Text>
+      </TouchableOpacity>
 
       {/* DEFAULT LABELS */}
       <Text style={styles.sectionTitle}>Default Labels</Text>
@@ -401,277 +400,212 @@ const checkIfUserExists = useCallback(async () => {
       )}
 
       {defaultDescriptions.map((item) => (
-        <View key={item.id} style={styles.defaultCard}>
-          <Text style={styles.defaultLabel}>{item.label}</Text>
-          <Text>{item.description}</Text>
+        <View key={item.id} style={styles.cardYellow}>
+          <Text style={styles.cardTitle}>{item.label}</Text>
+          <Text style={styles.cardText}>{item.description}</Text>
         </View>
       ))}
 
+      {/* PRIVATE LABELS */}
       <Text style={styles.sectionTitle}>Private Labels</Text>
 
-{privateDescriptions.length === 0 && (
-  <Text style={styles.emptyText}>No private labels yet</Text>
-)}
+      {privateDescriptions.length === 0 && (
+        <Text style={styles.emptyText}>No private labels yet</Text>
+      )}
 
-{privateDescriptions.map((item) => (
-  <View key={item.id} style={styles.privateCard}>
-    <View style={styles.manualHeader}>
-      <Text style={styles.privateLabel}>{item.label}</Text>
-      <TouchableOpacity onPress={() => handlePrivateDelete(item.id)}>
-        <Text style={styles.deleteIcon}>🗑️</Text>
-      </TouchableOpacity>
-    </View>
-    <Text>{item.description}</Text>
-  </View>
-))}
+      {privateDescriptions.map((item) => (
+        <View key={item.id} style={styles.cardPurple}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{item.label}</Text>
+            <TouchableOpacity onPress={() => handlePrivateDelete(item.id)}>
+              <Text style={styles.deleteIcon}>🗑️</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.cardText}>{item.description}</Text>
+        </View>
+      ))}
 
       {/* MANUAL LABELS */}
       <Text style={styles.sectionTitle}>Your Labels</Text>
 
-      {loading && <Text>Loading...</Text>}
+      {loading && <Text style={{ color: "white" }}>Loading...</Text>}
 
       {!loading && descriptions.length === 0 && (
         <Text style={styles.emptyText}>No labels yet</Text>
       )}
 
       {descriptions.map((item) => (
-        <View key={item.id} style={styles.manualCard}>
-          <View style={styles.manualHeader}>
-            <Text style={styles.manualLabel}>{item.label}</Text>
+        <View key={item.id} style={styles.cardBlue}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{item.label}</Text>
             <TouchableOpacity onPress={() => handleDelete(item.id)}>
               <Text style={styles.deleteIcon}>🗑️</Text>
             </TouchableOpacity>
           </View>
-          <Text>{item.description}</Text>
+          <Text style={styles.cardText}>{item.description}</Text>
         </View>
       ))}
 
-      {/* MODAL */}
-      <Modal transparent visible={modalVisible} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Label</Text>
-
-            <TextInput
-              placeholder="Label"
-              style={styles.input}
-              value={label}
-              onChangeText={setLabel}
-            />
-
-            <TextInput
-              placeholder="Description"
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-            />
-
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}
-            >
-              <Text style={styles.saveText}>Save</Text>
-            </TouchableOpacity>
-
-            <Pressable onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal transparent visible={privateModalVisible} animationType="fade">
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalTitle}>Add Private Label</Text>
-
-      <TextInput
-        placeholder="Private Label"
-        style={styles.input}
-        value={privateLabel}
-        onChangeText={setPrivateLabel}
-      />
-
-      <TextInput
-        placeholder="Private Description"
-        style={[styles.input, styles.textArea]}
-        value={privateDescription}
-        onChangeText={setPrivateDescription}
-        multiline
-      />
-
-      <TouchableOpacity
-        style={[styles.saveButton, { backgroundColor: "#8E44AD" }]}
-        onPress={handleSavePrivate}
-      >
-        <Text style={styles.saveText}>Save</Text>
-      </TouchableOpacity>
-
-      <Pressable onPress={() => setPrivateModalVisible(false)}>
-        <Text style={styles.cancelText}>Cancel</Text>
-      </Pressable>
     </View>
-  </View>
-</Modal>
-    </ScrollView>
-  );
+  </ScrollView>
+);
 }
 
 // =============================
 // 🔹 STYLES
 // =============================
 const styles = StyleSheet.create({
-  container: { padding: 16 },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(13,17,23,0.97)",
+    padding: 20,
+  },
 
   avatarRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 20,
   },
 
   avatar: {
-    backgroundColor: "#444",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    backgroundColor: "#4F46E5",
+    width: 85,
+    height: 85,
+    borderRadius: 42,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  avatarText: { color: "white", fontSize: 32 },
+  avatarText: {
+    color: "white",
+    fontSize: 34,
+    fontWeight: "bold",
+  },
 
   reviewsButton: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 14,
     backgroundColor: "#FFD700",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 22,
-    elevation: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-
-  reviewsIcon: { fontSize: 16, marginRight: 6 },
 
   reviewsText: {
     fontWeight: "bold",
-    letterSpacing: 0.6,
   },
 
-  name: { fontSize: 22, fontWeight: "bold" },
-  phone: { color: "gray" },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 
-  sectionTitle: {
-    marginTop: 20,
-    fontSize: 18,
+  name: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
+  },
+
+  phone: {
+    color: "#aaa",
+    marginTop: 4,
+  },
+
+  link: {
+    color: "#4F46E5",
+    fontWeight: "bold",
+    marginTop: 6,
+  },
+
+  userBadge: {
+    marginLeft: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    color: "white",
+    fontSize: 12,
     fontWeight: "bold",
   },
 
-  defaultCard: {
-    backgroundColor: "#FFF3CD",
-    padding: 12,
-    borderRadius: 8,
+  sectionTitle: {
+    marginTop: 25,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+  },
+
+  emptyText: {
+    color: "#777",
     marginTop: 8,
   },
 
-  defaultLabel: { fontWeight: "bold" },
-
-  manualCard: {
-    backgroundColor: "#E3F2FD",
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
+  primaryButton: {
+    backgroundColor: "#4F46E5",
+    padding: 14,
+    borderRadius: 18,
+    alignItems: "center",
+    marginTop: 20,
   },
 
-  manualLabel: { fontWeight: "bold" },
+  secondaryButton: {
+    backgroundColor: "#8E44AD",
+    padding: 14,
+    borderRadius: 18,
+    alignItems: "center",
+    marginTop: 12,
+  },
 
-  manualHeader: {
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
 
-  deleteIcon: { fontSize: 18, color: "#FF3B30" },
-
-  button: {
-    backgroundColor: "#007AFF",
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-    alignItems: "center",
-  },
-
-  emptyText: { color: "gray", marginTop: 6 },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  modalContent: {
-    width: "90%",
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 20,
-  },
-
-  modalTitle: {
-    fontSize: 18,
+  cardTitle: {
     fontWeight: "bold",
-    marginBottom: 12,
-    textAlign: "center",
+    color: "white",
   },
 
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+  cardText: {
+    color: "#ccc",
+    marginTop: 6,
   },
 
-  textArea: { height: 100 },
-
-  saveButton: {
-    backgroundColor: "#007AFF",
+  cardBlue: {
+    backgroundColor: "#161B22",
     padding: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  saveText: { color: "white", fontWeight: "bold" },
-
-  cancelText: {
-    textAlign: "center",
-    color: "#FF3B30",
+    borderRadius: 18,
     marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#30363D",
   },
 
-  userBadge: {
-  marginLeft: 8,
-  paddingHorizontal: 8,
-  paddingVertical: 3,
-  borderRadius: 10,
-  color: "white",
-  fontSize: 12,
-  fontWeight: "bold",
-},
-linkedin: {
-  color: "#0A66C2",
-  marginTop: 6,
-  fontWeight: "bold",
-},
-privateCard: {
-  backgroundColor: "#E8DAEF",
-  padding: 12,
-  borderRadius: 8,
-  marginTop: 8,
-},
+  cardPurple: {
+    backgroundColor: "#1E152A",
+    padding: 14,
+    borderRadius: 18,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#3D2C5B",
+  },
 
-privateLabel: {
-  fontWeight: "bold",
-  color: "#6C3483",
-},
+  cardYellow: {
+    backgroundColor: "#2A220D",
+    padding: 14,
+    borderRadius: 18,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#5A4A14",
+  },
+
+  deleteIcon: {
+    fontSize: 18,
+    color: "#FF4D4D",
+  },
 });

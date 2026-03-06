@@ -8,10 +8,12 @@ import {
   PermissionsAndroid,
   Platform,
   ImageBackground,
+  Image
 } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
 import Contacts from "react-native-contacts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import BottomNav from "../components/BottomNav"
 import logo from "../NETworkLogo.png";
 
 export default function Menu({ navigation }) {
@@ -104,22 +106,34 @@ export default function Menu({ navigation }) {
 
         {/* 🔹 TOP BAR */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => navigation.navigate("LogIn")}>
-            <Text style={styles.logout}>Logout</Text>
-          </TouchableOpacity>
+          <LinearGradient
+            colors={["#ff4d4f", "#760b12"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.logoutButton}
+          >
+            <TouchableOpacity onPress={() => navigation.navigate("LogIn")}>
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          </LinearGradient>
 
           <View style={styles.brandContainer}>
             <Text style={styles.brandTop}>from your</Text>
-            <Text style={styles.brandMain}>
-              <Text style={{color:"#059669"}}>NET</Text>
-              <Text style={{color:"#4F46E5"}}>work</Text>
-            
-            </Text>
+
+            <Image source={logo} style={styles.brandLogo} />
+
             <Text style={styles.brandBottom}>to the whole WORLD</Text>
           </View>
 
           <TouchableOpacity onPress={handleResync}>
-            <Text style={styles.sync}>Resync</Text>
+            <LinearGradient
+              colors={["#00d1b2", "#043a35"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.syncButton}
+            >
+              <Text style={styles.syncText}>Resync</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
@@ -149,24 +163,14 @@ export default function Menu({ navigation }) {
         </View>
 
         {/* 🔥 BOTTOM NAVIGATION */}
-        <View style={styles.bottomBar}>
-          <BottomItem emoji="👥" onPress={() => navigation.navigate("My Contacts")} />
-          <BottomItem emoji="🪪" onPress={() => navigation.navigate("Default")} />
-          <BottomItem emoji="✈️" onPress={() => navigation.navigate("Recommendations")} />
-          <BottomItem emoji="⚙️" onPress={() => navigation.navigate("Settings")} />
-        </View>
+        <BottomNav navigation={navigation} active="menu" />
 
       </View>
     </ImageBackground>
   );
 }
 
-/* 🔹 Bottom Item */
-const BottomItem = ({ emoji, onPress }) => (
-  <TouchableOpacity style={styles.bottomItem} onPress={onPress}>
-    <Text style={styles.bottomEmoji}>{emoji}</Text>
-  </TouchableOpacity>
-);
+
 
 const styles = StyleSheet.create({
   background: {
@@ -198,15 +202,32 @@ const styles = StyleSheet.create({
     color: "white",
   },
 
-  logout: {
-    color: "#ff4d4f",
-    fontWeight: "600",
-  },
+logoutButton: {
+  borderRadius: 25,
+  paddingVertical: 10,
+  paddingHorizontal: 25,
+  alignSelf: "center",
+},
 
-  sync: {
-    color: "#00d1b2",
-    fontWeight: "600",
-  },
+logoutText: {
+  color: "white",
+  fontWeight: "600",
+  fontSize: 16,
+},
+
+  syncButton: {
+  borderRadius: 25,
+  paddingVertical: 10,
+  paddingHorizontal: 25,
+  alignSelf: "center",
+  marginTop: 10,
+},
+
+syncText: {
+  color: "white",
+  fontWeight: "600",
+  fontSize: 16,
+},
 
   centerContainer: {
     flex: 1,
@@ -266,12 +287,13 @@ const styles = StyleSheet.create({
   },
   brandContainer: {
   alignItems: "center",
+  justifyContent: "center",
 },
 
 brandTop: {
-  fontSize: 11,
-  color: "white",
-  fontweight: "bold",
+  fontSize: 13,
+  color: "#4F46E5",
+  fontWeight: "bold",
   letterSpacing: 1,
 },
 
@@ -284,7 +306,13 @@ brandMain: {
 
 brandBottom: {
   fontSize: 11,
-  color: "white",
+  color: "#059669",
   letterSpacing: 1,
+},
+brandLogo: {
+  width: 90,
+  height: 40,
+  resizeMode: "contain",
+  marginVertical: 2,
 },
 });
