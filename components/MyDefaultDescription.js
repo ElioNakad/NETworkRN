@@ -24,7 +24,7 @@ export default function MyDefaultDescription({navigation}) {
   const [defaults, setDefaults] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
 
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   const loadDefaults = useCallback(async () => {
     try {

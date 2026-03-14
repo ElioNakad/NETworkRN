@@ -17,7 +17,7 @@ import BottomNav from "./BottomNav";
 export default function DisplayContacts({ navigation }) {
   const [searchName, setSearchName] = useState("");
   const [token, setToken] = useState(null);
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   useEffect(() => {
     AsyncStorage.getItem("token").then(setToken);

@@ -21,7 +21,7 @@ export default function ContactDetails({ route,navigation }) {
   const [description, setDescription] = useState("");
   const [isUser, setIsUser] = useState(false);
 const [checkingUser, setCheckingUser] = useState(false);
-
+const [blocked, setBlocked] = useState(contact.block === "true");
   const [descriptions, setDescriptions] = useState([]);
 const [linkedUser, setLinkedUser] = useState(null);
 
@@ -33,9 +33,38 @@ const [linkedUser, setLinkedUser] = useState(null);
 const [privateLabel, setPrivateLabel] = useState("");
 const [privateDescription, setPrivateDescription] = useState("");
 const [privateDescriptions, setPrivateDescriptions] = useState([]);
-  const url="192.168.16.105"
+  const url="192.168.43.73"
 
 
+
+  const toggleBlock = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    const newStatus = !blocked;
+
+    const res = await fetch(`http://${url}:3000/api/contacts/change-block`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        contact_id: contact.contact_id,
+        block: newStatus.toString()
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message);
+
+    setBlocked(newStatus);
+
+  } catch (err) {
+    Alert.alert("Error", err.message);
+  }
+};
 
   const loadDescriptions = useCallback(async () => {
     if (!contact) return;
@@ -350,6 +379,18 @@ const checkIfUserExists = useCallback(async () => {
 
       <Text style={styles.phone}>{contact.phone}</Text>
 
+      <TouchableOpacity
+  style={[
+    styles.blockButton,
+    { backgroundColor: blocked ? "#ff3b30" : "#34C759" }
+  ]}
+  onPress={toggleBlock}
+>
+  <Text style={styles.blockText}>
+    {blocked ? "🚫 BLOCKED" : "✅ UNBLOCKED"}
+  </Text>
+</TouchableOpacity>
+
       {/* LINKED INFO */}
       {isUser && linkedUser && (
         <View style={{ marginTop: 10 }}>
@@ -445,6 +486,96 @@ const checkIfUserExists = useCallback(async () => {
           <Text style={styles.cardText}>{item.description}</Text>
         </View>
       ))}
+
+      <Modal
+  animationType="slide"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalBox}>
+      <Text style={styles.modalTitle}>Add Label</Text>
+
+      <TextInput
+        placeholder="Label"
+        placeholderTextColor="#888"
+        value={label}
+        onChangeText={setLabel}
+        style={styles.input}
+      />
+
+      <TextInput
+        placeholder="Description"
+        placeholderTextColor="#888"
+        value={description}
+        onChangeText={setDescription}
+        style={styles.input}
+      />
+
+      <View style={styles.modalButtons}>
+        <Pressable
+          style={styles.cancelBtn}
+          onPress={() => setModalVisible(false)}
+        >
+          <Text style={styles.buttonText}>Cancel</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.saveBtn}
+          onPress={handleSave}
+        >
+          <Text style={styles.buttonText}>Save</Text>
+        </Pressable>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+<Modal
+  animationType="slide"
+  transparent={true}
+  visible={privateModalVisible}
+  onRequestClose={() => setPrivateModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalBox}>
+      <Text style={styles.modalTitle}>Add Private Label</Text>
+
+      <TextInput
+        placeholder="Label"
+        placeholderTextColor="#888"
+        value={privateLabel}
+        onChangeText={setPrivateLabel}
+        style={styles.input}
+      />
+
+      <TextInput
+        placeholder="Description"
+        placeholderTextColor="#888"
+        value={privateDescription}
+        onChangeText={setPrivateDescription}
+        style={styles.input}
+      />
+
+      <View style={styles.modalButtons}>
+        <Pressable
+          style={styles.cancelBtn}
+          onPress={() => setPrivateModalVisible(false)}
+        >
+          <Text style={styles.buttonText}>Cancel</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.saveBtn}
+          onPress={handleSavePrivate}
+        >
+          <Text style={styles.buttonText}>Save</Text>
+        </Pressable>
+      </View>
+    </View>
+  </View>
+</Modal>
 
     </View>
   </ScrollView>
@@ -608,4 +739,64 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#FF4D4D",
   },
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.7)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+modalBox: {
+  backgroundColor: "#161B22",
+  padding: 20,
+  borderRadius: 16,
+  width: "85%",
+},
+
+modalTitle: {
+  color: "white",
+  fontSize: 18,
+  fontWeight: "bold",
+  marginBottom: 12,
+},
+blockButton: {
+  marginTop: 12,
+  paddingVertical: 8,
+  paddingHorizontal: 14,
+  borderRadius: 20,
+  alignSelf: "flex-start"
+},
+
+blockText: {
+  color: "white",
+  fontWeight: "600",
+  fontSize: 13
+},
+input: {
+  backgroundColor: "#0D1117",
+  color: "white",
+  padding: 10,
+  borderRadius: 10,
+  marginTop: 10,
+  borderWidth: 1,
+  borderColor: "#30363D",
+},
+
+modalButtons: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginTop: 20,
+},
+
+cancelBtn: {
+  backgroundColor: "#444",
+  padding: 10,
+  borderRadius: 10,
+},
+
+saveBtn: {
+  backgroundColor: "#4F46E5",
+  padding: 10,
+  borderRadius: 10,
+},
 });

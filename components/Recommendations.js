@@ -22,7 +22,7 @@ export default function Recommendations({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   useEffect(() => {
     fetchRecommendations();

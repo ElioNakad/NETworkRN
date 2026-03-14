@@ -25,7 +25,7 @@ export default function Settings({navigation}) {
   const [loadingCV, setLoadingCV] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
 
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   useEffect(() => {
     fetchUser();

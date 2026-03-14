@@ -19,7 +19,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   async function login() {
     if (!email || !password) {

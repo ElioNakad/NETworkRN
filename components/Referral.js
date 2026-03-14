@@ -22,7 +22,7 @@ export default function Referral() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   async function search() {
     if (!prompt.trim()) return;

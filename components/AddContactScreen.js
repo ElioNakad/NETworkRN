@@ -22,7 +22,7 @@ export default function AddContactScreen({ navigation }) {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   // =========================
   // PHONE NORMALIZER

@@ -30,7 +30,7 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [linkedin, setLinkedin] = useState("");
 
-  const url = "192.168.16.105";
+  const url = "192.168.43.73";
 
   const normalizePhone = (rawNumber, countryCode) => {
     if (!rawNumber) return null;
