@@ -35,51 +35,16 @@ export default function DisplayContacts({ navigation }) {
       try {
         setIsLoading(true);
 
-        const res = await fetch(`http://${url}:3000/api/contacts`, {
+        const res = await fetch(`http://${url}:3000/api/contacts/full`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
 
-        const enriched = await Promise.all(
-          data.contacts.map(async (c) => {
-            try {
-              const [manualRes, defaultRes, privateRes] =
-                await Promise.all([
-                  fetch(
-                    `http://${url}:3000/api/description/${c.contact_id}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                  ),
-                  fetch(
-                    `http://${url}:3000/api/description/default/${c.phone}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                  ),
-                  fetch(
-                    `http://${url}:3000/api/description/get-private/${c.contact_id}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                  ),
-                ]);
+        // ✅ Already enriched from backend
+        setContacts(data.contacts);
 
-              const manual = await manualRes.json();
-              const defaults = await defaultRes.json();
-              const privates = await privateRes.json();
-
-              return {
-                ...c,
-                labels: [
-                  ...(manual.descriptions || []),
-                  ...(defaults.descriptions || []),
-                  ...(privates.descriptions || []),
-                ].map((d) => d.label.toLowerCase()),
-              };
-            } catch {
-              return { ...c, labels: [] };
-            }
-          })
-        );
-
-        setContacts(enriched);
       } catch (err) {
         setError(err.message);
       } finally {
