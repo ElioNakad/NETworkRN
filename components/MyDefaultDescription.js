@@ -17,6 +17,8 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import logo from "../NETworkLogo.png";
 import BottomNav from "./BottomNav";
+import { url } from "../config";
+
 export default function MyDefaultDescription({navigation}) {
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
@@ -24,7 +26,7 @@ export default function MyDefaultDescription({navigation}) {
   const [defaults, setDefaults] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
 
-  const url = "192.168.43.73";
+ // const url = "192.168.43.73";
 
   const loadDefaults = useCallback(async () => {
     try {

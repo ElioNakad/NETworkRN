@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import logo from "../NETworkLogo.png";
+import { url } from "../config";
 
 export default function AI() {
   const [prompt, setPrompt] = useState("");
@@ -23,7 +24,7 @@ export default function AI() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const url = "192.168.43.73";
+//  const url = "192.168.43.73";
 
   async function search() {
     if (!prompt.trim()) return;

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { url } from "../config";
 
 /* =============================
    🔹 DATE FORMATTER
@@ -41,7 +42,7 @@ export default function Reviews({ route }) {
   const [currentUserId, setCurrentUserId] = useState(null);
 
 
-  const url="192.168.43.73"
+ // const url="192.168.43.73"
 
   /* =============================
      🔹 FETCH REVIEWS

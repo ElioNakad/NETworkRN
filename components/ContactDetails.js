@@ -12,6 +12,7 @@ import {
   Linking,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { url } from "../config";
 
 export default function ContactDetails({ route,navigation }) {
   const { contact } = route.params || {};
@@ -33,7 +34,7 @@ const [linkedUser, setLinkedUser] = useState(null);
 const [privateLabel, setPrivateLabel] = useState("");
 const [privateDescription, setPrivateDescription] = useState("");
 const [privateDescriptions, setPrivateDescriptions] = useState([]);
-  const url="192.168.43.73"
+ // const url="192.168.43.73"
 
 
 

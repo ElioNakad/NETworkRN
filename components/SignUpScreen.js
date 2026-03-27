@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import Contacts from "react-native-contacts";
 import logo from "../NETworkLogo.png";
+import { url } from "../config";
 
 export default function SignUpScreen() {
   const [firstName, setFirstName] = useState("");
@@ -30,8 +31,9 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [linkedin, setLinkedin] = useState("");
 
-  const url = "192.168.43.73";
+ // const url = "192.168.43.73";
 
+ 
   const normalizePhone = (rawNumber, countryCode) => {
     if (!rawNumber) return null;
 

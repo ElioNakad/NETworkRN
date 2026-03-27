@@ -16,13 +16,13 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomNav from "./BottomNav";
 import logo from "../NETworkLogo.png";
+import { url } from "../config";
 
 export default function Recommendations({ navigation }) {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const url = "192.168.43.73";
+  const [expandedUser, setExpandedUser] = useState(null);
 
   useEffect(() => {
     fetchRecommendations();
@@ -73,7 +73,14 @@ export default function Recommendations({ navigation }) {
     const match = (item.similarity_score * 100).toFixed(0);
 
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() =>
+          setExpandedUser(
+            expandedUser === item.user_id ? null : item.user_id
+          )
+        }
+      >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {item.name.charAt(0).toUpperCase()}
@@ -93,14 +100,73 @@ export default function Recommendations({ navigation }) {
             AI Compatibility Score
           </Text>
 
+          {item.labels && item.labels.length > 0 && (
+  <View style={styles.labelContainer}>
+    {item.labels.map((label, index) => (
+      <View key={index} style={styles.labelBadge}>
+        <Text style={styles.labelText}>{label}</Text>
+      </View>
+    ))}
+  </View>
+)}
+
           <TouchableOpacity
             style={styles.button}
             onPress={() => openWhatsApp(item.phone)}
           >
             <Text style={styles.buttonText}>💬 Message</Text>
           </TouchableOpacity>
+
+          {/* NETWORK TREE */}
+          {/* NETWORK TREE */}
+{/* NETWORK TREE */}
+{expandedUser === item.user_id && item.bridge_user && (
+  <View style={styles.networkBox}>
+    <Text style={styles.networkLabel}>Connection Path</Text>
+
+    <View style={styles.networkRow}>
+
+      {/* YOU */}
+      <View style={styles.node}>
+        <View style={[styles.nodeCircle, { backgroundColor: "#4F46E5" }]}>
+          <Text style={styles.nodeText}>Y</Text>
         </View>
+        <Text style={styles.nodeLabel}>You</Text>
       </View>
+
+      <View style={styles.connector} />
+
+      {/* BRIDGE */}
+      <View style={styles.node}>
+        <View style={[styles.nodeCircle, { backgroundColor: "#D97706" }]}>
+          <Text style={styles.nodeText}>
+            {item.bridge_user.name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <Text style={styles.nodeLabel} numberOfLines={1}>
+          {item.bridge_user.name}
+        </Text>
+      </View>
+
+      <View style={styles.connector} />
+
+      {/* TARGET */}
+      <View style={styles.node}>
+        <View style={[styles.nodeCircle, { backgroundColor: "#16A34A" }]}>
+          <Text style={styles.nodeText}>
+            {item.name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <Text style={styles.nodeLabel} numberOfLines={1}>
+          {item.name.split(" ")[0]}
+        </Text>
+      </View>
+
+    </View>
+  </View>
+)}
+        </View>
+      </TouchableOpacity>
     );
   };
 
@@ -113,12 +179,10 @@ export default function Recommendations({ navigation }) {
       <View style={styles.overlay}>
         <SafeAreaView style={{ flex: 1 }}>
 
-          {/* LOGO */}
           <View style={styles.logoContainer}>
             <Image source={logo} style={styles.logo} resizeMode="contain" />
           </View>
 
-          {/* HEADER */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>AI Recommendations</Text>
             <Text style={styles.headerSubtitle}>
@@ -127,7 +191,11 @@ export default function Recommendations({ navigation }) {
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#6366F1" style={{ marginTop: 50 }} />
+            <ActivityIndicator
+              size="large"
+              color="#6366F1"
+              style={{ marginTop: 50 }}
+            />
           ) : error ? (
             <Text style={styles.error}>{error}</Text>
           ) : recommendations.length === 0 ? (
@@ -159,17 +227,17 @@ export default function Recommendations({ navigation }) {
 const styles = StyleSheet.create({
 
   background: {
-    flex: 1,
+    flex: 1
   },
 
   backgroundImage: {
     opacity: 0.8,
-    resizeMode: "contain",
+    resizeMode: "contain"
   },
 
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(13,17,23,0.95)",
+    backgroundColor: "rgba(13,17,23,0.95)"
   },
 
   logoContainer: {
@@ -272,6 +340,22 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
 
+  tree: {
+    marginTop: 15,
+    alignItems: "center"
+  },
+
+  treeNode: {
+    color: "#58A6FF",
+    fontWeight: "bold",
+    fontSize: 14
+  },
+
+  treeLine: {
+    color: "#8B949E",
+    fontSize: 18
+  },
+
   error: {
     color: "red",
     textAlign: "center",
@@ -299,5 +383,131 @@ const styles = StyleSheet.create({
     color: "#8B949E",
     textAlign: "center",
     marginTop: 10
-  }
+  },
+  networkContainer: {
+  marginTop: 20,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center"
+},
+
+nodeContainer: {
+  alignItems: "center"
+},
+
+
+nodeWrapper: {
+  alignItems: "center",
+  width: 55
+},
+
+pulseRing: {
+  display: "none"
+},
+
+connectorWrapper: {
+  width: 40,
+  alignItems: "center",
+  justifyContent: "center",
+  marginHorizontal: 3
+},
+
+connectorLine: {
+  height: 2,
+  width: "100%",
+  backgroundColor: "#30363D",
+  borderRadius: 1
+},
+
+hopLabel: {
+  color: "#555E6B",
+  fontSize: 8,
+  marginBottom: 3
+},
+
+legend: {
+  flexDirection: "row",
+  justifyContent: "center",
+  gap: 10,
+  marginTop: 10
+},
+
+legendDot: {
+  fontSize: 10
+},
+networkBox: {
+  marginTop: 14,
+  padding: 14,
+  backgroundColor: "#0D1117",
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "#21262D"
+},
+
+networkLabel: {
+  color: "#8B949E",
+  fontSize: 11,
+  marginBottom: 12,
+  textAlign: "center"
+},
+
+networkRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center"
+},
+
+node: {
+  alignItems: "center",
+  width: 70
+},
+
+nodeCircle: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  justifyContent: "center",
+  alignItems: "center"
+},
+
+nodeText: {
+  color: "white",
+  fontWeight: "bold",
+  fontSize: 14
+},
+
+nodeLabel: {
+  color: "#C9D1D9",
+  fontSize: 10,
+  marginTop: 5,
+  maxWidth: 70,
+  textAlign: "center"
+},
+
+connector: {
+  width: 30,
+  height: 2,
+  backgroundColor: "#30363D",
+  marginHorizontal: 5
+},
+labelContainer: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  marginTop: 6,
+},
+
+labelBadge: {
+  backgroundColor: "#EEF2FF",
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 12,
+  marginRight: 6,
+  marginTop: 4
+},
+
+labelText: {
+  fontSize: 12,
+  color: "#4F46E5",
+  fontWeight: "500"
+},
 });

@@ -14,10 +14,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import logo from "../NETworkLogo.png";
 import BottomNav from "./BottomNav";  
+import { url } from "../config";
+
 export default function DisplayContacts({ navigation }) {
   const [searchName, setSearchName] = useState("");
   const [token, setToken] = useState(null);
-  const url = "192.168.43.73";
+ // const url = "192.168.43.73";
 
   useEffect(() => {
     AsyncStorage.getItem("token").then(setToken);

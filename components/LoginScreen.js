@@ -13,13 +13,14 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import logo from "../NETworkLogo.png";
+import { url } from "../config";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const url = "192.168.43.73";
+//  const url = "192.168.43.73";
 
   async function login() {
     if (!email || !password) {
@@ -47,7 +48,6 @@ export default function LoginScreen({ navigation }) {
 
       await AsyncStorage.setItem("token", data.token);
 
-      Alert.alert("Success", `Welcome ${data.user.fname}`);
       navigation.navigate("Menu");
     } catch (err) {
       Alert.alert("Login Failed", err.message);

@@ -15,6 +15,7 @@ import Contacts from "react-native-contacts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomNav from "../components/BottomNav"
 import logo from "../NETworkLogo.png";
+import { url } from "../config";
 
 export default function Menu({ navigation }) {
 
@@ -64,7 +65,7 @@ export default function Menu({ navigation }) {
       }
 
       const res = await fetch(
-        "http://192.168.43.73:3000/api/contacts/resync",
+        "http://"+url+":3000/api/contacts/resync",
         {
           method: "POST",
           headers: {
