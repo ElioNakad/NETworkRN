@@ -11,75 +11,84 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useQuery } from "@tanstack/react-query";
 import logo from "../NETworkLogo.png";
-import BottomNav from "./BottomNav";  
+import BottomNav from "./BottomNav";
 import { url } from "../config";
 
 export default function DisplayContacts({ navigation }) {
   const [searchName, setSearchName] = useState("");
   const [token, setToken] = useState(null);
- // const url = "192.168.43.73";
+  const [contacts, setContacts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    AsyncStorage.getItem("token").then(setToken);
+    AsyncStorage.getItem("token").then((t) => {
+      setToken(t);
+    });
   }, []);
 
-  const fetchContacts = async () => {
-    if (!token) throw new Error("Not authenticated");
+  useEffect(() => {
+    if (!token) return;
 
-    const res = await fetch(`http://${url}:3000/api/contacts`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const fetchContacts = async () => {
+      try {
+        setIsLoading(true);
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
+        const res = await fetch(`http://${url}:3000/api/contacts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-    const enriched = await Promise.all(
-      data.contacts.map(async (c) => {
-        try {
-          const [manualRes, defaultRes, privateRes] = await Promise.all([
-            fetch(
-              `http://${url}:3000/api/description/${c.contact_id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            ),
-            fetch(
-              `http://${url}:3000/api/description/default/${c.phone}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            ),
-            fetch(
-              `http://${url}:3000/api/description/get-private/${c.contact_id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            ),
-          ]);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
 
-          const manual = await manualRes.json();
-          const defaults = await defaultRes.json();
-          const privates = await privateRes.json();
+        const enriched = await Promise.all(
+          data.contacts.map(async (c) => {
+            try {
+              const [manualRes, defaultRes, privateRes] =
+                await Promise.all([
+                  fetch(
+                    `http://${url}:3000/api/description/${c.contact_id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  ),
+                  fetch(
+                    `http://${url}:3000/api/description/default/${c.phone}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  ),
+                  fetch(
+                    `http://${url}:3000/api/description/get-private/${c.contact_id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  ),
+                ]);
 
-          return {
-            ...c,
-            labels: [
-              ...(manual.descriptions || []),
-              ...(defaults.descriptions || []),
-              ...(privates.descriptions || []),
-            ].map((d) => d.label.toLowerCase()),
-          };
-        } catch {
-          return { ...c, labels: [] };
-        }
-      })
-    );
+              const manual = await manualRes.json();
+              const defaults = await defaultRes.json();
+              const privates = await privateRes.json();
 
-    return enriched;
-  };
+              return {
+                ...c,
+                labels: [
+                  ...(manual.descriptions || []),
+                  ...(defaults.descriptions || []),
+                  ...(privates.descriptions || []),
+                ].map((d) => d.label.toLowerCase()),
+              };
+            } catch {
+              return { ...c, labels: [] };
+            }
+          })
+        );
 
-  const { data: contacts = [], isLoading, error } = useQuery({
-    queryKey: ["contacts", token],
-    queryFn: fetchContacts,
-    enabled: !!token,
-    staleTime: 1000 * 60 * 5,
-  });
+        setContacts(enriched);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContacts();
+  }, [token]);
 
   const filteredContacts = useMemo(() => {
     const q = searchName.toLowerCase();
@@ -126,23 +135,21 @@ export default function DisplayContacts({ navigation }) {
     >
       <View style={styles.overlay}>
         <TouchableOpacity
-  style={styles.addContactButton}
-  onPress={() => navigation.navigate("AddContactScreen")}
->
-  <Text style={styles.addContactText}>➕ Add Contact</Text>
-</TouchableOpacity>
-        {/* 🔥 LOGO */}
+          style={styles.addContactButton}
+          onPress={() => navigation.navigate("AddContactScreen")}
+        >
+          <Text style={styles.addContactText}>➕ Add Contact</Text>
+        </TouchableOpacity>
+
         <View style={styles.logoContainer}>
           <Image source={logo} style={styles.logo} resizeMode="contain" />
         </View>
 
-        {/* 🔥 HEADER */}
         <View style={styles.header}>
           <Text style={styles.title}>My Contacts</Text>
           <Text style={styles.count}>{contacts.length} contacts</Text>
         </View>
 
-        {/* 🔥 SEARCH */}
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name, phone, or label"
@@ -171,58 +178,26 @@ export default function DisplayContacts({ navigation }) {
             contentContainerStyle={{ paddingBottom: 30 }}
           />
         )}
-        <BottomNav navigation={navigation} active="contacts" />
 
-        
+        <BottomNav navigation={navigation} active="contacts" />
       </View>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
-
-  backgroundImage: {
-    opacity: 0.15,
-    resizeMode: "contain",
-  },
-
+  background: { flex: 1 },
+  backgroundImage: { opacity: 0.15, resizeMode: "contain" },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(13,17,23,0.95)",
     paddingHorizontal: 20,
   },
-
-  logoContainer: {
-    marginTop: 60,
-    alignItems: "center",
-  },
-
-  logo: {
-    width: 120,
-    height: 120,
-  },
-
-  header: {
-    marginTop: 10,
-    marginBottom: 15,
-    alignItems: "center",
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "white",
-  },
-
-  count: {
-    fontSize: 14,
-    color: "#aaa",
-    marginTop: 4,
-  },
-
+  logoContainer: { marginTop: 60, alignItems: "center" },
+  logo: { width: 120, height: 120 },
+  header: { marginTop: 10, marginBottom: 15, alignItems: "center" },
+  title: { fontSize: 26, fontWeight: "bold", color: "white" },
+  count: { fontSize: 14, color: "#aaa", marginTop: 4 },
   searchInput: {
     backgroundColor: "#161B22",
     paddingHorizontal: 18,
@@ -234,7 +209,6 @@ const styles = StyleSheet.create({
     borderColor: "#30363D",
     color: "white",
   },
-
   contactItem: {
     flexDirection: "row",
     padding: 15,
@@ -245,7 +219,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#30363D",
   },
-
   avatar: {
     width: 50,
     height: 50,
@@ -255,53 +228,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 15,
   },
-
-  avatarText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-
-  contactInfo: {
-    flex: 1,
-  },
-
-  contactName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "white",
-  },
-
-  contactPhone: {
-    fontSize: 14,
-    color: "#aaa",
-    marginTop: 4,
-  },
-
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  emptyText: {
-    fontSize: 16,
-    color: "#999",
-  },
+  avatarText: { color: "white", fontSize: 20, fontWeight: "bold" },
+  contactInfo: { flex: 1 },
+  contactName: { fontSize: 18, fontWeight: "600", color: "white" },
+  contactPhone: { fontSize: 14, color: "#aaa", marginTop: 4 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  emptyText: { fontSize: 16, color: "#999" },
   addContactButton: {
-  position: "absolute",
-  top: 20,
-  right: 20,
-  backgroundColor: "#00d1b2",
-  paddingVertical: 8,
-  paddingHorizontal: 14,
-  borderRadius: 20,
-  elevation: 4
-},
-
-addContactText: {
-  color: "white",
-  fontWeight: "600",
-  fontSize: 14
-}
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "#00d1b2",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    elevation: 4,
+  },
+  addContactText: { color: "white", fontWeight: "600", fontSize: 14 },
 });
